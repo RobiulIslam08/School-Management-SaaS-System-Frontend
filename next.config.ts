@@ -9,12 +9,6 @@ const nextConfig: NextConfig = {
           destination: "/owner-portal/:path*",
         },
       ],
-      afterFiles: [
-        {
-          source: "/api/:path*",
-          destination: "http://localhost:4000/api/:path*",
-        },
-      ],
     };
   },
 };
