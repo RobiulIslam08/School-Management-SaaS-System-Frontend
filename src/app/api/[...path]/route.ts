@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 
 const HOP_BY_HOP = new Set([
   "connection",
+  "content-encoding",
   "content-length",
   "host",
   "keep-alive",
@@ -25,8 +26,11 @@ async function proxy(req: NextRequest, context: { params: Promise<{ path: string
   const target = `${backendOrigin()}/api/${path.join("/")}${req.nextUrl.search}`;
   const headers = new Headers();
   req.headers.forEach((value, key) => {
-    if (!HOP_BY_HOP.has(key.toLowerCase())) headers.set(key, value);
+    if (!HOP_BY_HOP.has(key.toLowerCase()) && key.toLowerCase() !== "accept-encoding") {
+      headers.set(key, value);
+    }
   });
+  headers.set("accept-encoding", "identity");
 
   const method = req.method;
   const hasBody = method !== "GET" && method !== "HEAD";
@@ -53,13 +57,16 @@ async function proxy(req: NextRequest, context: { params: Promise<{ path: string
     out.append(key, value);
   });
   out.set("Cache-Control", "no-store");
+  out.delete("content-encoding");
+  out.delete("content-length");
 
   const cookies = typeof upstream.headers.getSetCookie === "function" ? upstream.headers.getSetCookie() : [];
   for (const cookie of cookies) {
     out.append("Set-Cookie", cookie);
   }
 
-  return new NextResponse(upstream.body, {
+  const body = await upstream.arrayBuffer();
+  return new NextResponse(body, {
     status: upstream.status,
     statusText: upstream.statusText,
     headers: out,
