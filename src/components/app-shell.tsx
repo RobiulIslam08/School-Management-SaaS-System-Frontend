@@ -63,7 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className={cn("flex min-h-screen", (!authed || isLoading) && "hidden")}>
         <aside
           className={cn(
-            "no-print fixed inset-y-0 z-40 w-72 overflow-y-auto border-r border-border bg-sidebar p-4 transition md:static md:translate-x-0",
+            "no-print fixed inset-y-0 z-40 flex w-72 flex-col overflow-y-auto border-r border-border bg-sidebar p-4 transition md:static md:translate-x-0",
             open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           )}
         >
@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <h2 className="text-lg font-semibold leading-tight">{session?.settings?.name ?? "School"}</h2>
             <p className="text-xs text-muted-foreground">{session?.settings?.academicYear}</p>
           </div>
-          <nav className="space-y-4">
+          <nav className="flex-1 space-y-4">
             {groups.map((group) => (
               <div key={group.titleKey}>
                 <p className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -96,6 +96,18 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             ))}
           </nav>
+          <Button
+            variant="secondary"
+            className="mt-auto h-11 w-full md:hidden"
+            onClick={async () => {
+              setOpen(false);
+              await logout();
+              router.push("/login");
+            }}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            {t.common.signOut}
+          </Button>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="no-print sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-white/90 px-4 backdrop-blur">
@@ -123,6 +135,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
               <Button
                 variant="secondary"
+                className="hidden md:inline-flex"
                 aria-label={t.common.signOut}
                 onClick={async () => {
                   await logout();

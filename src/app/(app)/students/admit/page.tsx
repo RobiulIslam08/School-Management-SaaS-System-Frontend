@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { QueryError } from "@/components/query-state";
 import { Button, Card, Field, Input, Select, Textarea } from "@/components/ui";
 import { useCreateStudentMutation, useGetClassesQuery, useMeQuery } from "@/lib/api/schoolApi";
+import { classFamilies, classFamilyLabel, resolveClassMember, type ClassRow } from "@/lib/class-families";
 import { sectionNames } from "@/lib/sections";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ export default function AdmitPage() {
   const { data: classes, isError: classesError, refetch: refetchClasses } = useGetClassesQuery();
   const [createStudent, { isLoading }] = useCreateStudentMutation();
   const [step, setStep] = useState(0);
+  const [familyLabel, setFamilyLabel] = useState("");
   const [form, setForm] = useState({
     name: "",
     nameBn: "",
@@ -32,11 +34,14 @@ export default function AdmitPage() {
     previousSchool: "",
     healthNotes: "",
     address: { division: "", district: "", upazila: "", area: "" },
-    guardian: { fatherName: "", motherName: "", guardianName: "", nid: "", phone: "", occupation: "" },
+    guardian: { fatherName: "", motherName: "", guardianName: "", relation: "Father", nid: "", phone: "", occupation: "" },
     talentTags: "",
   });
 
-  const classList = (classes?.data ?? []) as Array<{ _id: string; name: string; sections?: unknown }>;
+  const classList = (classes?.data ?? []) as ClassRow[];
+  const families = useMemo(() => classFamilies(classList), [classList]);
+  const family = families.find((item) => item.label === familyLabel);
+  const needsGroup = Boolean(family && family.groups.length);
   const sections = useMemo(
     () => sectionNames(classList.find((item) => item._id === form.classId)?.sections as never),
     [classList, form.classId]
@@ -50,6 +55,18 @@ export default function AdmitPage() {
 
   function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function applyClass(nextLabel: string, nextGroup: string) {
+    const resolved = resolveClassMember(classList, nextLabel, nextGroup);
+    const nextSections = sectionNames(resolved?.sections as never);
+    setFamilyLabel(nextLabel);
+    setForm((prev) => ({
+      ...prev,
+      classId: resolved?._id ?? "",
+      group: resolved?.group && resolved.group !== "None" ? resolved.group : "None",
+      section: nextSections[0] ?? "A",
+    }));
   }
 
   function canNext() {
@@ -112,16 +129,16 @@ export default function AdmitPage() {
             </Field>
             <Field label={t.common.class}>
               <Select
-                value={form.classId}
+                value={familyLabel}
                 onChange={(e) => {
-                  const next = sectionNames(classList.find((item) => item._id === e.target.value)?.sections as never);
-                  setForm((prev) => ({ ...prev, classId: e.target.value, section: next[0] ?? "A" }));
+                  const next = families.find((item) => item.label === e.target.value);
+                  applyClass(e.target.value, next?.groups[0] ?? "None");
                 }}
               >
                 <option value="">{t.common.class}</option>
-                {classList.map((item) => (
-                  <option key={item._id} value={item._id}>
-                    {item.name}
+                {families.map((item) => (
+                  <option key={item.label} value={item.label}>
+                    {item.label}
                   </option>
                 ))}
               </Select>
@@ -135,16 +152,22 @@ export default function AdmitPage() {
                 ))}
               </Select>
             </Field>
-            <Field label={t.common.group}>
-              <Select value={form.group} onChange={(e) => set("group", e.target.value)}>
-                <option value="None">None</option>
-                <option value="Science">Science</option>
-                <option value="Business">Business</option>
-                <option value="Humanities">Humanities</option>
-              </Select>
-            </Field>
+            {needsGroup ? (
+              <Field label={t.common.group}>
+                <Select value={form.group} onChange={(e) => applyClass(familyLabel, e.target.value)}>
+                  {family?.groups.map((group) => (
+                    <option key={group} value={group}>
+                      {group}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            ) : null}
             <Field label={t.common.year}>
               <Input value={form.academicYear} onChange={(e) => set("academicYear", e.target.value)} />
+            </Field>
+            <Field label={t.students.talentTags}>
+              <Input value={form.talentTags} onChange={(e) => set("talentTags", e.target.value)} placeholder={t.students.talentHint} />
             </Field>
           </div>
         ) : null}
@@ -159,7 +182,7 @@ export default function AdmitPage() {
             <Field label={t.reports.upazila}>
               <Input value={form.address.upazila} onChange={(e) => set("address", { ...form.address, upazila: e.target.value })} />
             </Field>
-            <Field label={t.reports.area}>
+            <Field label={t.students.holding}>
               <Input value={form.address.area} onChange={(e) => set("address", { ...form.address, area: e.target.value })} />
             </Field>
           </div>
@@ -172,14 +195,18 @@ export default function AdmitPage() {
             <Field label={t.common.mother}>
               <Input value={form.guardian.motherName} onChange={(e) => set("guardian", { ...form.guardian, motherName: e.target.value })} />
             </Field>
+            <Field label={t.common.relation}>
+              <Select value={form.guardian.relation} onChange={(e) => set("guardian", { ...form.guardian, relation: e.target.value })}>
+                <option value="Father">{t.common.father}</option>
+                <option value="Mother">{t.common.mother}</option>
+                <option value="Other">{t.common.other}</option>
+              </Select>
+            </Field>
             <Field label={`${t.common.guardian} NID`}>
               <Input value={form.guardian.nid} onChange={(e) => set("guardian", { ...form.guardian, nid: e.target.value })} />
             </Field>
             <Field label={`${t.common.guardian} ${t.common.phone}`}>
               <Input value={form.guardian.phone} onChange={(e) => set("guardian", { ...form.guardian, phone: e.target.value })} />
-            </Field>
-            <Field label={t.common.tags}>
-              <Input value={form.talentTags} onChange={(e) => set("talentTags", e.target.value)} placeholder={t.students.talentHint} />
             </Field>
             <Field label={t.common.previousSchool}>
               <Input value={form.previousSchool} onChange={(e) => set("previousSchool", e.target.value)} />
@@ -195,13 +222,15 @@ export default function AdmitPage() {
           <div className="space-y-2 text-sm leading-7">
             <p className="text-lg font-semibold">{form.name || "—"}</p>
             <p>
-              {selectedClass?.name ?? "—"} · {form.section} · {form.phone || "—"}
+              {selectedClass ? classFamilyLabel(selectedClass.name) : "—"}
+              {form.group !== "None" ? ` · ${form.group}` : ""} · {form.section} · {form.phone || "—"}
             </p>
             <p>
               {form.address.district || "—"}, {form.address.upazila || "—"}, {form.address.area || "—"}
             </p>
             <p>
-              {t.common.guardian}: {form.guardian.fatherName || form.guardian.guardianName || "—"} ({form.guardian.phone || "—"})
+              {t.common.guardian}: {form.guardian.fatherName || form.guardian.guardianName || "—"} ({form.guardian.relation}) (
+              {form.guardian.phone || "—"})
             </p>
           </div>
         ) : null}

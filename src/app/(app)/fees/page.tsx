@@ -34,6 +34,21 @@ export default function FeesPage() {
           <p className="mt-2 text-sm">{Object.entries(summary?.data.byMethod ?? {}).map(([k, v]) => `${k}: ${v}`).join(" · ") || "—"}</p>
         </Card>
       </div>
+      {(summary?.data.byClass ?? []).length ? (
+        <div className="mb-6">
+          <h2 className="mb-3 text-lg font-semibold">{t.fees.byClass}</h2>
+          <DataTable
+            rows={summary?.data.byClass ?? []}
+            rowKey={(row) => row.classId}
+            columns={[
+              { header: t.common.class, cell: (row) => row.name, sortValue: (row) => row.name },
+              { header: t.reports.count, cell: (row) => row.studentCount, align: "right", sortValue: (row) => row.studentCount },
+              { header: t.fees.classDue, cell: (row) => `৳ ${row.due}`, align: "right", sortValue: (row) => row.due },
+              { header: t.fees.classPaid, cell: (row) => `৳ ${row.collected}`, align: "right", sortValue: (row) => row.collected },
+            ]}
+          />
+        </div>
+      ) : null}
       <FormPanel className="md:grid-cols-4" onSubmit={async (e) => {
         e.preventDefault();
         toastApiResult(await createLedger(form), t.fees.addDue, t.common.loadError);

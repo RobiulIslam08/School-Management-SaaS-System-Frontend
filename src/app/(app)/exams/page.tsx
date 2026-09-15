@@ -4,11 +4,21 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { toastApiResult } from "@/lib/toast-api";
 import { DataTable, FormPanel } from "@/components/data-table";
+import { ConfirmDialog, Dialog } from "@/components/dialog";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state";
 import { Button, Field, Input } from "@/components/ui";
-import { useCreateExamMutation, useCreateRuleMutation, useGetClassesQuery, useGetExamsQuery, useGetRulesQuery } from "@/lib/api/schoolApi";
+import {
+  useCreateExamMutation,
+  useCreateRuleMutation,
+  useDeleteExamMutation,
+  useGetClassesQuery,
+  useGetExamsQuery,
+  useGetRulesQuery,
+  useUpdateExamMutation,
+} from "@/lib/api/schoolApi";
 import { usePublishExamMutation } from "@/lib/api/workspaceApi";
+import { duplicateExamLabels } from "@/lib/exam-names";
 import { useI18n } from "@/lib/i18n";
 
 type ExamRow = { _id: string; name: string; code: string; academicYear: string; isPublished?: boolean };
@@ -16,6 +26,7 @@ type RuleRow = {
   name: string;
   academicYear: string;
   isDefault?: boolean;
+  classId?: string | { _id?: string } | null;
   weights: Array<{ weight: number; examTypeId?: { _id?: string; name?: string } | string }>;
 };
 
@@ -25,35 +36,64 @@ function examWeightId(value: RuleRow["weights"][number]["examTypeId"]): string {
   return value._id ?? "";
 }
 
+function ruleClassId(rule: RuleRow): string {
+  if (!rule.classId) return "";
+  if (typeof rule.classId === "string") return rule.classId;
+  return rule.classId._id ?? "";
+}
+
+function matchingRule(rules: RuleRow[], academicYear: string, classId: string): RuleRow | undefined {
+  if (classId) {
+    const byClass = rules.find((rule) => rule.academicYear === academicYear && ruleClassId(rule) === classId);
+    if (byClass) return byClass;
+  }
+  return (
+    rules.find((rule) => rule.academicYear === academicYear && rule.isDefault && !ruleClassId(rule)) ??
+    rules.find((rule) => rule.academicYear === academicYear && rule.isDefault) ??
+    rules.find((rule) => rule.isDefault)
+  );
+}
+
 export default function ExamsPage() {
   const { t } = useI18n();
   const { data, isLoading, isError, refetch } = useGetExamsQuery();
   const { data: rules } = useGetRulesQuery();
   const [createExam] = useCreateExamMutation();
+  const [updateExam] = useUpdateExamMutation();
+  const [deleteExam] = useDeleteExamMutation();
   const [createRule] = useCreateRuleMutation();
   const [publishExam] = usePublishExamMutation();
   const { data: classes } = useGetClassesQuery();
   const [formulaClassId, setFormulaClassId] = useState("");
   const [exam, setExam] = useState({ name: "", code: "", academicYear: "2026" });
-  const exams = (data?.data ?? []) as ExamRow[];
-  const ruleList = (rules?.data ?? []) as RuleRow[];
+  const [edit, setEdit] = useState<ExamRow | null>(null);
+  const [removeId, setRemoveId] = useState<string | null>(null);
+  const exams = useMemo(() => (data?.data ?? []) as ExamRow[], [data?.data]);
+  const ruleList = useMemo(() => (rules?.data ?? []) as RuleRow[], [rules?.data]);
   const [weights, setWeights] = useState<Record<string, number>>({});
+  const duplicates = duplicateExamLabels(exams);
+  const year = exams[0]?.academicYear ?? exam.academicYear;
+  const activeRule = matchingRule(ruleList, year, formulaClassId);
 
   useEffect(() => {
     if (!exams.length) return;
-    const active = ruleList.find((rule) => rule.isDefault) ?? ruleList[0];
+    const active = matchingRule(ruleList, exams[0]?.academicYear ?? "", formulaClassId);
     const next: Record<string, number> = {};
     exams.forEach((item, index) => {
       const match = active?.weights.find((row) => examWeightId(row.examTypeId) === item._id);
       if (match) next[item._id] = match.weight;
+      else if (active) next[item._id] = 0;
       else {
         const equal = Math.floor(100 / exams.length);
         next[item._id] = index === exams.length - 1 ? 100 - equal * (exams.length - 1) : equal;
       }
     });
-    setWeights(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exams, ruleList]);
+    setWeights((prev) => {
+      const keys = Object.keys(next);
+      if (keys.length === Object.keys(prev).length && keys.every((key) => prev[key] === next[key])) return prev;
+      return next;
+    });
+  }, [exams, formulaClassId, ruleList]);
 
   const total = useMemo(() => Object.values(weights).reduce((sum, value) => sum + Number(value || 0), 0), [weights]);
   const totalOk = Math.abs(total - 100) < 0.01;
@@ -61,6 +101,11 @@ export default function ExamsPage() {
   return (
     <div>
       <PageHeader title={t.exams.title} subtitle={t.exams.subtitle} />
+      {duplicates.length ? (
+        <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+          {t.exams.duplicateWarn} {duplicates.join(" · ")}
+        </p>
+      ) : null}
       <FormPanel
         className="md:grid-cols-4"
         onSubmit={async (e) => {
@@ -71,7 +116,12 @@ export default function ExamsPage() {
         }}
       >
         <Field label={t.exams.examName} htmlFor="exam-name">
-          <Input id="exam-name" value={exam.name} onChange={(e) => setExam({ ...exam, name: e.target.value })} />
+          <Input
+            id="exam-name"
+            value={exam.name}
+            placeholder={t.exams.examNameHint}
+            onChange={(e) => setExam({ ...exam, name: e.target.value })}
+          />
         </Field>
         <Field label={t.common.code} htmlFor="exam-code">
           <Input id="exam-code" value={exam.code} onChange={(e) => setExam({ ...exam, code: e.target.value })} />
@@ -98,6 +148,8 @@ export default function ExamsPage() {
             label: row.isPublished ? t.common.draft : t.common.publish,
             onClick: async () => toastApiResult(await publishExam({ id: row._id, isPublished: !row.isPublished }), t.common.save),
           },
+          { label: t.common.edit, onClick: () => setEdit(row) },
+          { label: t.common.delete, danger: true, onClick: () => setRemoveId(row._id) },
         ]}
       />
       {exams.length ? (
@@ -109,7 +161,9 @@ export default function ExamsPage() {
               <select className="h-11 w-full rounded-md border px-3 text-sm" value={formulaClassId} onChange={(e) => setFormulaClassId(e.target.value)}>
                 <option value="">{t.exams.yearDefault}</option>
                 {((classes?.data ?? []) as Array<{ _id: string; name: string }>).map((item) => (
-                  <option key={item._id} value={item._id}>{item.name}</option>
+                  <option key={item._id} value={item._id}>
+                    {item.name}
+                  </option>
                 ))}
               </select>
             </Field>
@@ -141,23 +195,57 @@ export default function ExamsPage() {
               if (!exams.length) return toast.error(t.exams.needExam);
               if (!totalOk) return toast.error(t.exams.needHundred);
               const result = await createRule({
-                name: "Annual formula",
-                academicYear: exams[0]?.academicYear ?? "2026",
+                name: formulaClassId ? "Class formula" : "Annual formula",
+                academicYear: year,
                 scale: "gpa5",
                 isDefault: !formulaClassId,
                 classId: formulaClassId || undefined,
-                weights: exams.map((item) => ({ examTypeId: item._id, weight: Number(weights[item._id] || 0) })),
+                weights: exams
+                  .map((item) => ({ examTypeId: item._id, weight: Number(weights[item._id] || 0) }))
+                  .filter((row) => row.weight > 0),
               });
-              toastApiResult(result, t.exams.saveFormula, t.exams.needHundred);
+              toastApiResult(result, t.exams.saveFormula, t.common.loadError);
             }}
           >
             {t.exams.saveFormula}
           </Button>
           <p className="mt-3 text-sm text-muted-foreground">
-            {t.exams.activeFormula}: {ruleList[0]?.name ?? t.exams.none}
+            {t.exams.activeFormula}: {activeRule?.name ?? t.exams.none}
           </p>
         </section>
       ) : null}
+      <Dialog open={Boolean(edit)} title={t.exams.editExam} onClose={() => setEdit(null)}>
+        {edit ? (
+          <form
+            className="space-y-3"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const result = await updateExam({ id: edit._id, name: edit.name, code: edit.code });
+              if (toastApiResult(result, t.common.save, t.common.loadError)) setEdit(null);
+            }}
+          >
+            <Field label={t.exams.examName}>
+              <Input value={edit.name} placeholder={t.exams.examNameHint} onChange={(e) => setEdit({ ...edit, name: e.target.value })} />
+            </Field>
+            <Field label={t.common.code}>
+              <Input value={edit.code} onChange={(e) => setEdit({ ...edit, code: e.target.value })} />
+            </Field>
+            <Button type="submit">{t.common.save}</Button>
+          </form>
+        ) : null}
+      </Dialog>
+      <ConfirmDialog
+        open={Boolean(removeId)}
+        title={t.common.delete}
+        message={t.exams.deleteAsk}
+        danger
+        onClose={() => setRemoveId(null)}
+        onConfirm={async () => {
+          if (!removeId) return;
+          toastApiResult(await deleteExam(removeId), t.common.delete, t.common.loadError);
+          setRemoveId(null);
+        }}
+      />
     </div>
   );
 }

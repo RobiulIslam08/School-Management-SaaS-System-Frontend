@@ -123,6 +123,14 @@ export const schoolApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/exams", method: "POST", body }),
       invalidatesTags: ["Exams"],
     }),
+    updateExam: build.mutation<Envelope<unknown>, { id: string } & Record<string, unknown>>({
+      query: ({ id, ...body }) => ({ url: `/exams/${id}`, method: "PATCH", body }),
+      invalidatesTags: ["Exams", "Rules"],
+    }),
+    deleteExam: build.mutation<Envelope<unknown>, string>({
+      query: (id) => ({ url: `/exams/${id}`, method: "DELETE" }),
+      invalidatesTags: ["Exams", "Rules"],
+    }),
     getRules: build.query<Envelope<unknown[]>, void>({ query: () => "/grading-rules", providesTags: ["Rules"] }),
     createRule: build.mutation<Envelope<unknown>, Record<string, unknown>>({
       query: (body) => ({ url: "/grading-rules", method: "POST", body }),
@@ -163,7 +171,15 @@ export const schoolApi = baseApi.injectEndpoints({
       query: ({ id, ...body }) => ({ url: `/fees/ledgers/${id}/payments`, method: "POST", body }),
       invalidatesTags: ["Fees", "Dashboard"],
     }),
-    getFeeSummary: build.query<Envelope<{ due: number; collected: number; byMethod: Record<string, number> }>, void>({
+    getFeeSummary: build.query<
+      Envelope<{
+        due: number;
+        collected: number;
+        byMethod: Record<string, number>;
+        byClass?: Array<{ classId: string; name: string; due: number; collected: number; studentCount: number }>;
+      }>,
+      void
+    >({
       query: () => "/fees/summary",
       providesTags: ["Fees"],
     }),
@@ -276,6 +292,8 @@ export const {
   useSaveAttendanceMutation,
   useGetExamsQuery,
   useCreateExamMutation,
+  useUpdateExamMutation,
+  useDeleteExamMutation,
   useGetRulesQuery,
   useCreateRuleMutation,
   useGetResultsQuery,

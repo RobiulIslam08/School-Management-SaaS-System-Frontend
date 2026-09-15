@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button, Card, Field, Input, Select, Textarea } from "@/components/ui";
 import { useUpdateStudentMutation } from "@/lib/api/peopleApi";
 import { useGetClassesQuery, useGetStudentQuery } from "@/lib/api/schoolApi";
+import { classFamilies, classFamilyLabel, resolveClassMember, type ClassRow } from "@/lib/class-families";
 import { sectionNames } from "@/lib/sections";
 import { studentStatusTone } from "@/lib/status";
 import { useI18n } from "@/lib/i18n";
@@ -32,9 +33,9 @@ type Student = {
   previousSchool?: string;
   healthNotes?: string;
   talentTags?: string[];
-  classId?: { _id?: string; name?: string; sections?: unknown };
+  classId?: { _id?: string; name?: string; sections?: unknown; group?: string };
   address?: { division?: string; district?: string; upazila?: string; area?: string };
-  guardian?: { fatherName?: string; motherName?: string; phone?: string; nid?: string; occupation?: string };
+  guardian?: { fatherName?: string; motherName?: string; phone?: string; nid?: string; occupation?: string; relation?: string };
 };
 
 function statusLabel(t: ReturnType<typeof useI18n>["t"], status?: string) {
@@ -53,6 +54,7 @@ function StudentProfileInner() {
   const [updateStudent, { isLoading: saving }] = useUpdateStudentMutation();
   const student = data?.data as Student | undefined;
   const [open, setOpen] = useState(search.get("edit") === "1");
+  const [familyLabel, setFamilyLabel] = useState("");
   const [form, setForm] = useState({
     name: "",
     nameBn: "",
@@ -61,12 +63,24 @@ function StudentProfileInner() {
     section: "A",
     status: "active",
     group: "None",
+    relation: "Father",
     healthNotes: "",
     talentTags: "",
   });
 
+  const classList = (classes?.data ?? []) as ClassRow[];
+  const families = useMemo(() => classFamilies(classList), [classList]);
+  const family = families.find((item) => item.label === familyLabel);
+  const needsGroup = Boolean(family && family.groups.length);
+  const sections = useMemo(
+    () => sectionNames(classList.find((item) => item._id === form.classId)?.sections as never),
+    [classList, form.classId]
+  );
+
   useEffect(() => {
     if (!student) return;
+    const className = student.classId?.name ?? "";
+    setFamilyLabel(className ? classFamilyLabel(className) : "");
     setForm({
       name: student.name ?? "",
       nameBn: student.nameBn ?? "",
@@ -74,27 +88,36 @@ function StudentProfileInner() {
       classId: student.classId?._id ?? "",
       section: student.section ?? "A",
       status: student.status ?? "active",
-      group: student.group ?? "None",
+      group: student.group ?? student.classId?.group ?? "None",
+      relation: student.guardian?.relation ?? "Father",
       healthNotes: student.healthNotes ?? "",
       talentTags: (student.talentTags ?? []).join(", "),
     });
     if (search.get("edit") === "1") setOpen(true);
   }, [search, student]);
 
-  const classList = (classes?.data ?? []) as Array<{ _id: string; name: string; sections?: unknown }>;
-  const sections = useMemo(
-    () => sectionNames(classList.find((item) => item._id === form.classId)?.sections as never),
-    [classList, form.classId]
-  );
+  function applyClass(nextLabel: string, nextGroup: string) {
+    const resolved = resolveClassMember(classList, nextLabel, nextGroup);
+    const nextSections = sectionNames(resolved?.sections as never);
+    setFamilyLabel(nextLabel);
+    setForm((prev) => ({
+      ...prev,
+      classId: resolved?._id ?? "",
+      group: resolved?.group && resolved.group !== "None" ? resolved.group : "None",
+      section: nextSections.includes(prev.section) ? prev.section : (nextSections[0] ?? "A"),
+    }));
+  }
 
   if (isLoading) return <TableSkeleton />;
   if (isError || !student) return <QueryError onRetry={refetch} />;
+
+  const displayClass = student.classId?.name ? classFamilyLabel(student.classId.name) : "";
 
   return (
     <div>
       <PageHeader
         title={student.name}
-        subtitle={`${student.studentId} · ${student.classId?.name ?? ""} ${student.section ?? ""}`}
+        subtitle={`${student.studentId} · ${displayClass} ${student.group && student.group !== "None" ? student.group : ""} ${student.section ?? ""}`}
         actions={
           <>
             <StatusBadge label={statusLabel(t, student.status)} tone={studentStatusTone(student.status)} />
@@ -120,13 +143,13 @@ function StudentProfileInner() {
         <Card>
           <h2 className="font-semibold">{t.common.guardian}</h2>
           <p className="mt-2 text-sm">
-            {student.guardian?.fatherName || "—"} · {student.guardian?.phone || "—"}
+            {student.guardian?.fatherName || "—"} · {t.common.relation}: {student.guardian?.relation || "—"} · {student.guardian?.phone || "—"}
           </p>
           <p className="text-sm text-muted-foreground">NID: {student.guardian?.nid || "—"}</p>
           <p className="text-sm">{student.guardian?.occupation || ""}</p>
         </Card>
         <Card>
-          <h2 className="font-semibold">{t.nav.talent}</h2>
+          <h2 className="font-semibold">{t.students.talentTags}</h2>
           <p className="mt-2 text-sm">{student.talentTags?.length ? student.talentTags.join(", ") : t.talent.empty}</p>
           <p className="mt-2 text-sm text-muted-foreground">{student.healthNotes || t.common.health}</p>
         </Card>
@@ -164,6 +187,7 @@ function StudentProfileInner() {
                 .split(",")
                 .map((tag) => tag.trim())
                 .filter(Boolean),
+              guardian: { ...student.guardian, relation: form.relation },
             });
             if (toastApiResult(result, t.common.save, t.common.loadError)) setOpen(false);
           }}
@@ -179,19 +203,30 @@ function StudentProfileInner() {
           </Field>
           <Field label={t.common.class}>
             <Select
-              value={form.classId}
+              value={familyLabel}
               onChange={(e) => {
-                const next = sectionNames(classList.find((item) => item._id === e.target.value)?.sections as never);
-                setForm({ ...form, classId: e.target.value, section: next[0] ?? "A" });
+                const next = families.find((item) => item.label === e.target.value);
+                applyClass(e.target.value, next?.groups[0] ?? "None");
               }}
             >
-              {classList.map((item) => (
-                <option key={item._id} value={item._id}>
-                  {item.name}
+              {families.map((item) => (
+                <option key={item.label} value={item.label}>
+                  {item.label}
                 </option>
               ))}
             </Select>
           </Field>
+          {needsGroup ? (
+            <Field label={t.common.group}>
+              <Select value={form.group} onChange={(e) => applyClass(familyLabel, e.target.value)}>
+                {family?.groups.map((group) => (
+                  <option key={group} value={group}>
+                    {group}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          ) : null}
           <Field label={t.common.section}>
             <Select value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })}>
               {sections.map((name) => (
@@ -199,6 +234,13 @@ function StudentProfileInner() {
                   {name}
                 </option>
               ))}
+            </Select>
+          </Field>
+          <Field label={t.common.relation}>
+            <Select value={form.relation} onChange={(e) => setForm({ ...form, relation: e.target.value })}>
+              <option value="Father">{t.common.father}</option>
+              <option value="Mother">{t.common.mother}</option>
+              <option value="Other">{t.common.other}</option>
             </Select>
           </Field>
           <Field label={t.common.status}>
@@ -209,7 +251,7 @@ function StudentProfileInner() {
               <option value="transferred">{t.common.transferred}</option>
             </Select>
           </Field>
-          <Field label={t.common.tags}>
+          <Field label={t.students.talentTags}>
             <Input value={form.talentTags} onChange={(e) => setForm({ ...form, talentTags: e.target.value })} />
           </Field>
           <Field label={t.common.health}>

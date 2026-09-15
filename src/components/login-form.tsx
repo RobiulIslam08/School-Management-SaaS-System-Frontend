@@ -69,8 +69,8 @@ export function LoginForm({ owner = false }: { owner?: boolean }) {
         <div className="mt-6 space-y-3">
           <Label htmlFor="code">{t.auth.twoFactor}</Label>
           <Input id="code" value={code} onChange={(e) => setCode(e.target.value)} inputMode="numeric" />
-          <Button className="w-full" disabled={verifying} onClick={on2fa}>
-            {t.auth.verify}
+          <Button className="w-full" disabled={verifying} aria-busy={verifying} onClick={on2fa}>
+            {verifying ? t.auth.verifying : t.auth.verify}
           </Button>
         </div>
       ) : (
@@ -85,8 +85,8 @@ export function LoginForm({ owner = false }: { owner?: boolean }) {
             <Input id="password" type="password" autoComplete="current-password" {...form.register("password")} />
             <FieldError message={form.formState.errors.password?.message} />
           </div>
-          <Button className="w-full" disabled={isLoading} type="submit">
-            {t.auth.signIn}
+          <Button className="w-full" disabled={isLoading} aria-busy={isLoading} type="submit">
+            {isLoading ? t.auth.signingIn : t.auth.signIn}
           </Button>
           <p className="text-center text-sm">
             <Link
