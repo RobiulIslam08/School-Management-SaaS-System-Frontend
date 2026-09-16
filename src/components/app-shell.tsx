@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, Search, LogOut } from "lucide-react";
+import { Menu, Search, LogOut, X } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { useLogoutMutation, useMeQuery } from "@/lib/api/schoolApi";
 import { useI18n } from "@/lib/i18n";
@@ -61,16 +61,35 @@ export function AppShell({ children }: { children: ReactNode }) {
       ) : null}
 
       <div className={cn("flex min-h-screen", (!authed || isLoading) && "hidden")}>
+        {open ? (
+          <button
+            type="button"
+            className="fixed inset-0 z-30 bg-black/40 md:hidden"
+            aria-label={t.common.close}
+            onClick={() => setOpen(false)}
+          />
+        ) : null}
         <aside
           className={cn(
             "no-print fixed inset-y-0 z-40 flex w-72 flex-col overflow-y-auto border-r border-border bg-sidebar p-4 transition md:static md:translate-x-0",
             open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           )}
         >
-          <div className="mb-6 px-2">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">{t.auth.school}</p>
-            <h2 className="text-lg font-semibold leading-tight">{session?.settings?.name ?? "School"}</h2>
-            <p className="text-xs text-muted-foreground">{session?.settings?.academicYear}</p>
+          <div className="mb-6 flex items-start justify-between gap-2 px-2">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">{t.auth.school}</p>
+              <h2 className="text-lg font-semibold leading-tight">{session?.settings?.name ?? "School"}</h2>
+              <p className="text-xs text-muted-foreground">{session?.settings?.academicYear}</p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-11 w-11 shrink-0 md:hidden"
+              aria-label={t.common.close}
+              onClick={() => setOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </div>
           <nav className="flex-1 space-y-4">
             {groups.map((group) => (
@@ -111,7 +130,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="no-print sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-white/90 px-4 backdrop-blur">
-            <Button variant="ghost" className="md:hidden" aria-label={t.common.menu} onClick={() => setOpen((v) => !v)}>
+            <Button
+              variant="ghost"
+              className="md:hidden"
+              aria-label={open ? t.common.close : t.common.menu}
+              aria-expanded={open}
+              onClick={() => setOpen((v) => !v)}
+            >
               <Menu className="h-5 w-5" />
             </Button>
             <div className="relative hidden max-w-md flex-1 md:block">

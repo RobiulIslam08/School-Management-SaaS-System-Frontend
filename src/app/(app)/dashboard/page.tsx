@@ -56,8 +56,8 @@ export default function DashboardPage() {
             <StatCard href="/teachers" label={t.dashboard.teachers} value={stats.teachers ?? 0} icon={<GraduationCap size={18} />} />
             <StatCard href="/classes" label={t.dashboard.classes} value={stats.classes ?? 0} icon={<School size={18} />} />
             <StatCard href="/attendance" label={t.dashboard.attendancePct} value={`${stats.attendancePct ?? 0}%`} icon={<Percent size={18} />} trend={trendLabel(t.dashboard.vsLastMonth, stats.trends?.attendance)} tone="success" />
-            <StatCard href="/fees" label={t.dashboard.due} value={stats.due ?? 0} icon={<Wallet size={18} />} tone="danger" />
-            <StatCard href="/fees" label={t.dashboard.collected} value={stats.collectedMonth ?? 0} icon={<Banknote size={18} />} trend={trendLabel(t.dashboard.vsLastMonth, stats.trends?.collected)} />
+            <StatCard href="/fees/dues" label={t.dashboard.due} value={stats.due ?? 0} icon={<Wallet size={18} />} tone="danger" />
+            <StatCard href="/fees/collected" label={t.dashboard.collected} value={stats.collectedMonth ?? 0} icon={<Banknote size={18} />} trend={trendLabel(t.dashboard.vsLastMonth, stats.trends?.collected)} />
             <StatCard href="/exams" label={t.dashboard.upcomingExams} value={stats.upcomingExams ?? 0} icon={<CalendarDays size={18} />} />
             <StatCard href="/notices" label={t.dashboard.notices} value={stats.pendingNotices ?? 0} icon={<Bell size={18} />} tone="warning" />
           </div>

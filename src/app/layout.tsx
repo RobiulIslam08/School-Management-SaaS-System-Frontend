@@ -1,23 +1,28 @@
 import type { Metadata } from "next";
-import { Hind_Siliguri, Source_Sans_3 } from "next/font/google";
+import { Inter, Noto_Sans_Bengali } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
-const hind = Hind_Siliguri({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["bengali", "latin"],
-  variable: "--font-hind",
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
-const source = Source_Sans_3({
+const notoBengali = Noto_Sans_Bengali({
+  subsets: ["bengali"],
   weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-  variable: "--font-source",
+  variable: "--font-noto-bengali",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "School Management OS",
   description: "Isolated school operations dashboard",
+  icons: {
+    icon: [{ url: "/icon", type: "image/png" }],
+    apple: [{ url: "/apple-icon", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -25,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="bn"
       translate="no"
-      className={`notranslate ${hind.variable} ${source.variable} h-full antialiased`}
+      className={`notranslate ${inter.variable} ${notoBengali.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full bg-canvas font-sans text-foreground" suppressHydrationWarning>

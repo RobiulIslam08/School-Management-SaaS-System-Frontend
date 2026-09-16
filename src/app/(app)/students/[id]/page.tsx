@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button, Card, Field, Input, Select, Textarea } from "@/components/ui";
 import { useUpdateStudentMutation } from "@/lib/api/peopleApi";
 import { useGetClassesQuery, useGetStudentQuery } from "@/lib/api/schoolApi";
+import { formatStudentAddress } from "@/lib/address";
 import { classFamilies, classFamilyLabel, resolveClassMember, type ClassRow } from "@/lib/class-families";
 import { sectionNames } from "@/lib/sections";
 import { studentStatusTone } from "@/lib/status";
@@ -34,7 +35,7 @@ type Student = {
   healthNotes?: string;
   talentTags?: string[];
   classId?: { _id?: string; name?: string; sections?: unknown; group?: string };
-  address?: { division?: string; district?: string; upazila?: string; area?: string };
+  address?: { division?: string; district?: string; upazila?: string; area?: string; road?: string; holding?: string; block?: string };
   guardian?: { fatherName?: string; motherName?: string; phone?: string; nid?: string; occupation?: string; relation?: string };
 };
 
@@ -131,11 +132,7 @@ function StudentProfileInner() {
         <Card>
           <h2 className="font-semibold">{t.students.contact}</h2>
           <p className="mt-2 text-sm">{student.phone || "—"}</p>
-          <p className="text-sm text-muted-foreground">
-            {[student.address?.division, student.address?.district, student.address?.upazila, student.address?.area]
-              .filter(Boolean)
-              .join(" / ") || "—"}
-          </p>
+          <p className="text-sm text-muted-foreground">{formatStudentAddress(student.address) || "—"}</p>
           <p className="mt-2 text-sm">
             {t.common.blood}: {student.bloodGroup || "—"} · {t.common.religion}: {student.religion || "—"}
           </p>
@@ -156,8 +153,11 @@ function StudentProfileInner() {
         <Card>
           <h2 className="font-semibold">{t.common.actions}</h2>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Link href={`/fees?studentId=${student._id}`}>
-              <Button variant="secondary">{t.nav.fees}</Button>
+            <Link href={`/fees/dues?studentId=${student._id}`}>
+              <Button variant="secondary">{t.nav.feeDues}</Button>
+            </Link>
+            <Link href={`/fees/collected`}>
+              <Button variant="secondary">{t.nav.feeCollected}</Button>
             </Link>
             <Link href={`/results`}>
               <Button variant="secondary">{t.nav.results}</Button>

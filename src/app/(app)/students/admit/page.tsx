@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { QueryError } from "@/components/query-state";
 import { Button, Card, Field, Input, Select, Textarea } from "@/components/ui";
 import { useCreateStudentMutation, useGetClassesQuery, useMeQuery } from "@/lib/api/schoolApi";
+import { formatStudentAddress } from "@/lib/address";
 import { classFamilies, classFamilyLabel, resolveClassMember, type ClassRow } from "@/lib/class-families";
 import { sectionNames } from "@/lib/sections";
 import { useI18n } from "@/lib/i18n";
@@ -33,7 +34,7 @@ export default function AdmitPage() {
     academicYear: session?.data.settings?.academicYear ?? "2026",
     previousSchool: "",
     healthNotes: "",
-    address: { division: "", district: "", upazila: "", area: "" },
+    address: { division: "", district: "", upazila: "", area: "", road: "", holding: "", block: "" },
     guardian: { fatherName: "", motherName: "", guardianName: "", relation: "Father", nid: "", phone: "", occupation: "" },
     talentTags: "",
   });
@@ -173,6 +174,7 @@ export default function AdmitPage() {
         ) : null}
         {step === 1 ? (
           <div className="grid gap-4 md:grid-cols-2">
+            <p className="md:col-span-2 text-sm text-muted-foreground">{t.students.addressHint}</p>
             <Field label={t.reports.division}>
               <Input value={form.address.division} onChange={(e) => set("address", { ...form.address, division: e.target.value })} />
             </Field>
@@ -182,8 +184,17 @@ export default function AdmitPage() {
             <Field label={t.reports.upazila}>
               <Input value={form.address.upazila} onChange={(e) => set("address", { ...form.address, upazila: e.target.value })} />
             </Field>
-            <Field label={t.students.holding}>
+            <Field label={t.students.locality}>
               <Input value={form.address.area} onChange={(e) => set("address", { ...form.address, area: e.target.value })} />
+            </Field>
+            <Field label={t.students.road}>
+              <Input value={form.address.road} onChange={(e) => set("address", { ...form.address, road: e.target.value })} />
+            </Field>
+            <Field label={t.students.holding}>
+              <Input value={form.address.holding} onChange={(e) => set("address", { ...form.address, holding: e.target.value })} />
+            </Field>
+            <Field label={t.students.block}>
+              <Input value={form.address.block} onChange={(e) => set("address", { ...form.address, block: e.target.value })} />
             </Field>
           </div>
         ) : null}
@@ -225,9 +236,7 @@ export default function AdmitPage() {
               {selectedClass ? classFamilyLabel(selectedClass.name) : "—"}
               {form.group !== "None" ? ` · ${form.group}` : ""} · {form.section} · {form.phone || "—"}
             </p>
-            <p>
-              {form.address.district || "—"}, {form.address.upazila || "—"}, {form.address.area || "—"}
-            </p>
+            <p>{formatStudentAddress(form.address) || "—"}</p>
             <p>
               {t.common.guardian}: {form.guardian.fatherName || form.guardian.guardianName || "—"} ({form.guardian.relation}) (
               {form.guardian.phone || "—"})

@@ -13,6 +13,8 @@ export interface NavItem {
     | "teachers"
     | "staff"
     | "fees"
+    | "feeDues"
+    | "feeCollected"
     | "payroll"
     | "notices"
     | "sms"
@@ -64,7 +66,8 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     titleKey: "finance",
     items: [
-      { href: "/fees", labelKey: "fees", feature: "fees" },
+      { href: "/fees/dues", labelKey: "feeDues", feature: "fees" },
+      { href: "/fees/collected", labelKey: "feeCollected", feature: "fees" },
       { href: "/payroll", labelKey: "payroll", feature: "payroll" },
     ],
   },
