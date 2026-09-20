@@ -8,6 +8,7 @@ import "./api/workspaceApi";
 import "./api/peopleApi";
 import "./api/communicationApi";
 import "./api/operationsApi";
+import "./api/financeApi";
 
 export const store = configureStore({
   reducer: {

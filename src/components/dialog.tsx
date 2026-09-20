@@ -26,7 +26,7 @@ export function Dialog({
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-border bg-white p-5 shadow-md",
+          "relative z-10 max-h-[90vh] w-full max-w-lg overflow-x-hidden overflow-y-auto rounded-xl border border-border bg-white p-5 shadow-md",
           className
         )}
       >

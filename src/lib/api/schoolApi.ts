@@ -118,7 +118,13 @@ export const schoolApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/attendance/bulk", method: "POST", body }),
       invalidatesTags: ["Attendance", "Dashboard"],
     }),
-    getExams: build.query<Envelope<unknown[]>, void>({ query: () => "/exams", providesTags: ["Exams"] }),
+    getExams: build.query<Envelope<unknown[]>, { academicYear?: string } | void>({
+      query: (params) => {
+        const year = params && typeof params === "object" ? params.academicYear : undefined;
+        return year ? `/exams?academicYear=${encodeURIComponent(year)}` : "/exams";
+      },
+      providesTags: ["Exams"],
+    }),
     createExam: build.mutation<Envelope<unknown>, Record<string, unknown>>({
       query: (body) => ({ url: "/exams", method: "POST", body }),
       invalidatesTags: ["Exams"],
@@ -150,9 +156,20 @@ export const schoolApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/results", method: "POST", body }),
       invalidatesTags: ["Results"],
     }),
-    recomputeMerit: build.mutation<Envelope<unknown>, string>({
-      query: (examTypeId) => ({ url: `/results/${examTypeId}/merit`, method: "POST" }),
+    recomputeMerit: build.mutation<
+      Envelope<unknown>,
+      { examTypeId: string; classId?: string; section?: string } | string
+    >({
+      query: (arg) => {
+        const examTypeId = typeof arg === "string" ? arg : arg.examTypeId;
+        const body = typeof arg === "string" ? {} : { classId: arg.classId, section: arg.section };
+        return { url: `/results/${examTypeId}/merit`, method: "POST", body };
+      },
       invalidatesTags: ["Results"],
+    }),
+    getFinalGrade: build.query<Envelope<{ finalGpa: number; parts: unknown[] }>, { studentId: string; academicYear: string }>({
+      query: ({ studentId, academicYear }) =>
+        `/results/final/${studentId}?academicYear=${encodeURIComponent(academicYear)}`,
     }),
     getFeeStructures: build.query<Envelope<unknown[]>, void>({ query: () => "/fees/structures", providesTags: ["Fees"] }),
     createFeeStructure: build.mutation<Envelope<unknown>, Record<string, unknown>>({
@@ -165,11 +182,11 @@ export const schoolApi = baseApi.injectEndpoints({
     }),
     createLedger: build.mutation<Envelope<unknown>, Record<string, unknown>>({
       query: (body) => ({ url: "/fees/ledgers", method: "POST", body }),
-      invalidatesTags: ["Fees", "Dashboard"],
+      invalidatesTags: ["Fees", "Dashboard", "Accounts"],
     }),
     addPayment: build.mutation<Envelope<unknown>, { id: string } & Record<string, unknown>>({
       query: ({ id, ...body }) => ({ url: `/fees/ledgers/${id}/payments`, method: "POST", body }),
-      invalidatesTags: ["Fees", "Dashboard"],
+      invalidatesTags: ["Fees", "Dashboard", "Accounts"],
     }),
     getFeeSummary: build.query<
       Envelope<{
@@ -183,7 +200,29 @@ export const schoolApi = baseApi.injectEndpoints({
       query: () => "/fees/summary",
       providesTags: ["Fees"],
     }),
-    getNotices: build.query<Envelope<unknown[]>, void>({ query: () => "/notices", providesTags: ["Notices"] }),
+    getNotices: build.query<
+      Envelope<unknown[]>,
+      { status?: string; audience?: string; q?: string; category?: string } | void
+    >({
+      query: (params) => {
+        if (!params) return "/notices";
+        const search = new URLSearchParams();
+        if (params.status) search.set("status", params.status);
+        if (params.audience) search.set("audience", params.audience);
+        if (params.category) search.set("category", params.category);
+        if (params.q) search.set("q", params.q);
+        const qs = search.toString();
+        return qs ? `/notices?${qs}` : "/notices";
+      },
+      providesTags: ["Notices"],
+    }),
+    getNotice: build.query<Envelope<Record<string, unknown>>, string>({
+      query: (id) => `/notices/${id}`,
+      providesTags: ["Notices"],
+    }),
+    getPublicNotices: build.query<Envelope<unknown[]>, void>({
+      query: () => "/public/notices",
+    }),
     createNotice: build.mutation<Envelope<unknown>, Record<string, unknown>>({
       query: (body) => ({ url: "/notices", method: "POST", body }),
       invalidatesTags: ["Notices", "Dashboard"],
@@ -196,11 +235,11 @@ export const schoolApi = baseApi.injectEndpoints({
     getPayroll: build.query<Envelope<unknown[]>, void>({ query: () => "/payroll", providesTags: ["Payroll"] }),
     createPayroll: build.mutation<Envelope<unknown>, Record<string, unknown>>({
       query: (body) => ({ url: "/payroll", method: "POST", body }),
-      invalidatesTags: ["Payroll"],
+      invalidatesTags: ["Payroll", "Accounts", "Dashboard"],
     }),
     payPayroll: build.mutation<Envelope<unknown>, string>({
       query: (id) => ({ url: `/payroll/${id}/pay`, method: "PATCH" }),
-      invalidatesTags: ["Payroll"],
+      invalidatesTags: ["Payroll", "Accounts", "Dashboard"],
     }),
     getBooks: build.query<Envelope<unknown[]>, void>({ query: () => "/library/books", providesTags: ["Library"] }),
     createBook: build.mutation<Envelope<unknown>, Record<string, unknown>>({
@@ -299,6 +338,7 @@ export const {
   useGetResultsQuery,
   useSaveResultMutation,
   useRecomputeMeritMutation,
+  useGetFinalGradeQuery,
   useGetFeeStructuresQuery,
   useCreateFeeStructureMutation,
   useGetLedgersQuery,
@@ -306,6 +346,8 @@ export const {
   useAddPaymentMutation,
   useGetFeeSummaryQuery,
   useGetNoticesQuery,
+  useGetNoticeQuery,
+  useGetPublicNoticesQuery,
   useCreateNoticeMutation,
   useSendSmsMutation,
   useGetSmsQuery,

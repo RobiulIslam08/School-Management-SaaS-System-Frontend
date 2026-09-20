@@ -19,7 +19,7 @@ type SubjectRow = {
   group?: string;
   compulsory?: boolean;
   sortOrder?: number;
-  teacherId?: { _id?: string; name?: string } | string;
+  teacherId?: { _id?: string; name?: string; photoUrl?: string } | string;
   markDistribution?: { cq: number; mcq: number; practical: number; attendance: number };
 };
 
@@ -95,7 +95,7 @@ export default function SubjectsPage() {
           }
         }}
       >
-        <Field label={t.common.name}><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+        <Field label={t.subjects.nameLabel}><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
         <Field label={t.common.code}><Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} /></Field>
         <Field label={t.subjects.group}>
           <Select value={form.group} onChange={(e) => setForm({ ...form, group: e.target.value })}>
@@ -125,11 +125,29 @@ export default function SubjectsPage() {
         rows={rows}
         rowKey={(row) => row._id}
         columns={[
-          { header: t.common.name, cell: (row) => row.name, sortValue: (row) => row.name },
+          { header: t.subjects.nameLabel, cell: (row) => row.name, sortValue: (row) => row.name },
           { header: t.common.class, cell: (row) => typeof row.classId === "object" ? row.classId?.name : "—" },
           { header: t.subjects.group, cell: (row) => row.group ?? "Common" },
           { header: t.subjects.distribution, cell: (row) => `${row.markDistribution?.cq ?? 0}/${row.markDistribution?.mcq ?? 0}/${row.markDistribution?.practical ?? 0}` },
-          { header: t.subjects.assignTeacher, cell: (row) => typeof row.teacherId === "object" ? row.teacherId?.name : "—" },
+          {
+            header: t.subjects.assignTeacher,
+            cell: (row) => {
+              if (typeof row.teacherId !== "object" || !row.teacherId?.name) return "—";
+              return (
+                <div className="flex items-center gap-2">
+                  <div className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/80 bg-primary/10 text-[10px] font-semibold text-primary">
+                    {row.teacherId.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={row.teacherId.photoUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span>{row.teacherId.name.slice(0, 1)}</span>
+                    )}
+                  </div>
+                  <span>{row.teacherId.name}</span>
+                </div>
+              );
+            },
+          },
         ]}
         actions={(row) => {
           const i = rows.findIndex((item) => item._id === row._id);
@@ -161,7 +179,7 @@ export default function SubjectsPage() {
               setEdit(null);
             }}
           >
-            <Field label={t.common.name}><Input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></Field>
+            <Field label={t.subjects.nameLabel}><Input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></Field>
             <Field label={t.subjects.assignTeacher}>
               <Select
                 value={typeof edit.teacherId === "object" ? edit.teacherId?._id ?? "" : edit.teacherId ?? ""}

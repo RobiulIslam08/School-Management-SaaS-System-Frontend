@@ -68,7 +68,7 @@ function StudentProfileInner() {
   const { data: classes } = useGetClassesQuery();
   const [updateStudent, { isLoading: saving }] = useUpdateStudentMutation();
   const student = data?.data as Student | undefined;
-  const PHOTO_MAX_BYTES = 300 * 1024;
+  const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
   const [open, setOpen] = useState(search.get("edit") === "1");
   const [familyLabel, setFamilyLabel] = useState("");
   const [form, setForm] = useState({

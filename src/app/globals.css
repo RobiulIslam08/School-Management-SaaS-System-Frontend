@@ -35,6 +35,72 @@ body {
   line-height: 1.55;
 }
 
+/* Certificate office document — screen + shared ornament styles */
+.certificate-watermark {
+  opacity: 0.07;
+}
+
+.certificate-watermark img,
+.certificate-watermark span {
+  filter: grayscale(1);
+}
+
+.certificate-corner {
+  position: absolute;
+  z-index: 2;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-color: var(--foreground);
+  border-style: solid;
+  opacity: 0.7;
+}
+
+.certificate-corner-tl {
+  top: 0.45rem;
+  left: 0.45rem;
+  border-width: 2px 0 0 2px;
+}
+
+.certificate-corner-tr {
+  top: 0.45rem;
+  right: 0.45rem;
+  border-width: 2px 2px 0 0;
+}
+
+.certificate-corner-bl {
+  bottom: 0.45rem;
+  left: 0.45rem;
+  border-width: 0 0 2px 2px;
+}
+
+.certificate-corner-br {
+  bottom: 0.45rem;
+  right: 0.45rem;
+  border-width: 0 2px 2px 0;
+}
+
+/* Notice document body — wrap multi-line / long Bangla text on screen */
+.notice-body {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.notice-body-para {
+  margin: 0 0 0.85em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.notice-body-para:last-child {
+  margin-bottom: 0;
+}
+
 @media print {
   @page {
     size: A4 portrait;
@@ -65,6 +131,288 @@ body {
 
   .marksheet-sheet {
     box-shadow: none !important;
+  }
+
+  .certificate-sheet {
+    box-shadow: none !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+
+  .certificate-sheet .certificate-frame,
+  .certificate-sheet .certificate-watermark,
+  .certificate-sheet .certificate-seal,
+  .certificate-sheet .certificate-crest {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .certificate-watermark {
+    opacity: 0.08 !important;
+  }
+
+  /* Certificates: hide all chrome; only the certificate sheet prints */
+  body:has(.certificates-page) * {
+    visibility: hidden !important;
+  }
+
+  body:has(.certificates-page) .certificate-sheet,
+  body:has(.certificates-page) .certificate-sheet * {
+    visibility: visible !important;
+  }
+
+  body:has(.certificates-page) .certificate-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+
+  body:has(.certificates-page) .no-print,
+  body:has(.certificates-page) .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Marksheets: print only sheets, one per page */
+  body:has(.marksheets-page) * {
+    visibility: hidden !important;
+  }
+
+  body:has(.marksheets-page) .marksheet-sheet,
+  body:has(.marksheets-page) .marksheet-sheet * {
+    visibility: visible !important;
+  }
+
+  body:has(.marksheets-page) .marksheet-sheet {
+    position: relative !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 0 0 0 !important;
+    box-shadow: none !important;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  body:has(.marksheets-page) .marksheet-sheet:last-of-type {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  body:has(.marksheets-page) .no-print,
+  body:has(.marksheets-page) .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .notice-sheet {
+    box-shadow: none !important;
+    max-width: none !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .notice-sheet .notice-crest {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .notice-body,
+  .notice-body-para {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+  }
+
+  /* Notices: hide all chrome; only the notice sheet prints */
+  body:has(.notices-page) * {
+    visibility: hidden !important;
+  }
+
+  body:has(.notices-page) .notice-sheet,
+  body:has(.notices-page) .notice-sheet * {
+    visibility: visible !important;
+  }
+
+  body:has(.notices-page) .notice-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+
+  body:has(.notices-page) .no-print,
+  body:has(.notices-page) .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .id-card-sheet {
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body:has(.id-cards-page) * {
+    visibility: hidden !important;
+  }
+
+  body:has(.id-cards-page) .id-card-pair,
+  body:has(.id-cards-page) .id-card-pair *,
+  body:has(.id-cards-page) .id-card-sheet,
+  body:has(.id-cards-page) .id-card-sheet * {
+    visibility: visible !important;
+  }
+
+  body:has(.id-cards-page) .id-card-pair {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 8mm;
+  }
+
+  body:has(.id-cards-page) .no-print,
+  body:has(.id-cards-page) .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body:has(.payroll-page) * {
+    visibility: hidden !important;
+  }
+
+  body:has(.payroll-page) .payslip-sheet,
+  body:has(.payroll-page) .payslip-sheet * {
+    visibility: visible !important;
+  }
+
+  body:has(.payroll-page) .payslip-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body:has(.payroll-page) .no-print,
+  body:has(.payroll-page) .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body:has(.expenses-page):has(.expense-report-sheet) * {
+    visibility: hidden !important;
+  }
+
+  body:has(.expenses-page) .expense-report-sheet,
+  body:has(.expenses-page) .expense-report-sheet * {
+    visibility: visible !important;
+  }
+
+  body:has(.expenses-page) .expense-report-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body:has(.expenses-page) .no-print,
+  body:has(.expenses-page) .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body:has(.donations-page):has(.donation-receipt-sheet) * {
+    visibility: hidden !important;
+  }
+
+  body:has(.donations-page) .donation-receipt-sheet,
+  body:has(.donations-page) .donation-receipt-sheet * {
+    visibility: visible !important;
+  }
+
+  body:has(.donations-page) .donation-receipt-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body:has(.donations-page) .no-print,
+  body:has(.donations-page) .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body:has(.accounts-page):has(.accounts-report-sheet) * {
+    visibility: hidden !important;
+  }
+
+  body:has(.accounts-page) .accounts-report-sheet,
+  body:has(.accounts-page) .accounts-report-sheet * {
+    visibility: visible !important;
+  }
+
+  body:has(.accounts-page) .accounts-report-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body:has(.accounts-page) .no-print,
+  body:has(.accounts-page) .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body:has(.fees-collected-page):has(.fee-receipt-sheet) * {
+    visibility: hidden !important;
+  }
+
+  body:has(.fees-collected-page) .fee-receipt-sheet,
+  body:has(.fees-collected-page) .fee-receipt-sheet * {
+    visibility: visible !important;
+  }
+
+  body:has(.fees-collected-page) .fee-receipt-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body:has(.fees-collected-page) .no-print,
+  body:has(.fees-collected-page) .no-print * {
+    display: none !important;
+    visibility: hidden !important;
   }
 
   .admission-sheet {

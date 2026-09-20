@@ -30,35 +30,45 @@ export default function ClassesPage() {
   const [updateClass] = useUpdateClassMutation();
   const [archiveClass] = useArchiveClassMutation();
   const [deleteClass] = useDeleteClassMutation();
-  const [form, setForm] = useState({ name: "", code: "", level: 1, sections: "A,B" });
+  const [form, setForm] = useState({ name: "", sections: "A,B" });
   const [openId, setOpenId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<{ id: string; mode: "delete" | "archive" } | null>(null);
   const rows = (data?.data ?? []) as ClassRow[];
   const openRow = rows.find((row) => row._id === openId);
 
   const visible = useMemo(() => rows.filter((row) => row.isActive !== false), [rows]);
+  const nextLevel = useMemo(() => {
+    const max = visible.reduce((acc, row) => Math.max(acc, row.sortOrder ?? row.level ?? 0), 0);
+    return max + 1;
+  }, [visible]);
 
   return (
     <div>
       <PageHeader title={t.classes.title} subtitle={t.classes.subtitle} />
       <FormPanel
-        className="md:grid-cols-5"
+        className="md:grid-cols-3"
         onSubmit={async (e) => {
           e.preventDefault();
+          const code =
+            form.name
+              .trim()
+              .toUpperCase()
+              .replace(/[^A-Z0-9]+/g, "-")
+              .replace(/^-|-$/g, "")
+              .slice(0, 24) || `CLASS-${nextLevel}`;
           const result = await createClass({
-            ...form,
-            level: Number(form.level),
-            sortOrder: Number(form.level),
+            name: form.name,
+            code,
+            level: nextLevel,
+            sortOrder: nextLevel,
             sections: form.sections.split(",").map((item) => item.trim()).filter(Boolean),
           });
           if (toastApiResult(result, t.common.add, t.common.loadError)) {
-            setForm({ name: "", code: "", level: 1, sections: "A,B" });
+            setForm({ name: "", sections: "A,B" });
           }
         }}
       >
-        <Field label={t.common.name}><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
-        <Field label={t.common.code}><Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} /></Field>
-        <Field label={t.classes.level}><Input type="number" value={form.level} onChange={(e) => setForm({ ...form, level: Number(e.target.value) })} /></Field>
+        <Field label={t.classes.nameLabel}><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
         <Field label={t.classes.sections}><Input value={form.sections} onChange={(e) => setForm({ ...form, sections: e.target.value })} /></Field>
         <Button type="submit">{t.common.add}</Button>
       </FormPanel>
@@ -71,10 +81,8 @@ export default function ClassesPage() {
         rows={visible}
         rowKey={(row) => row._id}
         columns={[
-          { header: t.common.name, cell: (row) => row.name, sortValue: (row) => row.name },
-          { header: t.common.code, cell: (row) => row.code, sortValue: (row) => row.code },
+          { header: t.classes.nameLabel, cell: (row) => row.name, sortValue: (row) => row.name },
           { header: t.classes.sections, cell: (row) => sectionNames(row.sections).join(", ") },
-          { header: t.classes.level, cell: (row) => row.sortOrder ?? row.level, sortValue: (row) => row.sortOrder ?? row.level },
         ]}
         actions={(row) => [
           { label: t.classes.manage, onClick: () => setOpenId(row._id) },

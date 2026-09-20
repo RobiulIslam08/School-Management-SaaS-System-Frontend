@@ -14,7 +14,7 @@ import { sectionNames } from "@/lib/sections";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-const PHOTO_MAX_BYTES = 300 * 1024;
+const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
 
 const emptyAddress = () => ({
   division: "",

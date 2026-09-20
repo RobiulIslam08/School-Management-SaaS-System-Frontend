@@ -5,6 +5,7 @@ export interface NavItem {
     | "classes"
     | "subjects"
     | "attendance"
+    | "staffAttendance"
     | "exams"
     | "results"
     | "marksheets"
@@ -16,6 +17,9 @@ export interface NavItem {
     | "feeDues"
     | "feeCollected"
     | "payroll"
+    | "expenses"
+    | "donations"
+    | "accounts"
     | "notices"
     | "sms"
     | "talent"
@@ -51,6 +55,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/classes", labelKey: "classes", feature: "academics" },
       { href: "/subjects", labelKey: "subjects", feature: "academics" },
       { href: "/attendance", labelKey: "attendance", feature: "attendance" },
+      { href: "/staff-attendance", labelKey: "staffAttendance", feature: "staffAttendance" },
       { href: "/exams", labelKey: "exams", feature: "exams" },
       { href: "/results", labelKey: "results", feature: "results" },
       { href: "/marksheets", labelKey: "marksheets", feature: "results" },
@@ -71,6 +76,9 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/fees/dues", labelKey: "feeDues", feature: "fees" },
       { href: "/fees/collected", labelKey: "feeCollected", feature: "fees" },
       { href: "/payroll", labelKey: "payroll", feature: "payroll" },
+      { href: "/expenses", labelKey: "expenses", feature: "expenses" },
+      { href: "/donations", labelKey: "donations", feature: "donations" },
+      { href: "/accounts", labelKey: "accounts", feature: "accounts" },
     ],
   },
   {
