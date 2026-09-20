@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useLoginMutation, useVerify2faMutation } from "@/lib/api/schoolApi";
 import { useI18n } from "@/lib/i18n";
@@ -24,6 +25,7 @@ export function LoginForm({ owner = false }: { owner?: boolean }) {
   const [verify2fa, { isLoading: verifying }] = useVerify2faMutation();
   const [tempToken, setTempToken] = useState<string | null>(null);
   const [code, setCode] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "" },
@@ -82,7 +84,23 @@ export function LoginForm({ owner = false }: { owner?: boolean }) {
           </div>
           <div>
             <Label htmlFor="password">{t.auth.password}</Label>
-            <Input id="password" type="password" autoComplete="current-password" {...form.register("password")} />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                className="pr-11"
+                {...form.register("password")}
+              />
+              <button
+                type="button"
+                className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-label={showPassword ? t.common.hide : t.common.show}
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             <FieldError message={form.formState.errors.password?.message} />
           </div>
           <Button className="w-full" disabled={isLoading} aria-busy={isLoading} type="submit">

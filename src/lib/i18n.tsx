@@ -97,7 +97,7 @@ export const bn = {
     identity: "পরিচয়",
     appearance: "চেহারা",
     established: "প্রতিষ্ঠিত",
-    logo: "লোগো ইউআরএল",
+    logo: "লোগো",
   },
   nav: {
     overview: "সারসংক্ষেপ",
@@ -740,6 +740,8 @@ export const bn = {
     language: "ডিফল্ট ভাষা",
     smsHint: "কী শুধু সার্ভারে থাকে — গেটওয়ে এখন স্কোপের বাইরে।",
     languageHint: "নতুন সেশনের ডিফল্ট ভাষা।",
+    logoHint: "JPG, PNG বা WebP আপলোড করুন (সর্বোচ্চ ১০ এমবি)",
+    logoRemove: "লোগো সরান",
   },
   staff: {
     title: "ব্যবহারকারী ও অনুমতি",
@@ -911,7 +913,7 @@ export const en: { [K in keyof typeof bn]: { [P in keyof (typeof bn)[K]]: string
     identity: "Identity",
     appearance: "Appearance",
     established: "Established",
-    logo: "Logo URL",
+    logo: "Logo",
   },
   nav: {
     overview: "Overview",
@@ -1554,6 +1556,8 @@ export const en: { [K in keyof typeof bn]: { [P in keyof (typeof bn)[K]]: string
     language: "Default language",
     smsHint: "The key stays on the server — a gateway is out of scope for now.",
     languageHint: "Default language for new sessions.",
+    logoHint: "Upload JPG, PNG or WebP (max 10MB)",
+    logoRemove: "Remove logo",
   },
   staff: {
     title: "Users & permissions",
