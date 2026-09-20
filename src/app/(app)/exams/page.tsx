@@ -95,7 +95,7 @@ export default function ExamsPage() {
     });
   }, [exams, formulaClassId, ruleList]);
 
-  const total = useMemo(() => Object.values(weights).reduce((sum, value) => sum + Number(value || 0), 0), [weights]);
+  const total = useMemo(() => Object.values(weights).reduce<number>((sum, value) => sum + Number(value || 0), 0), [weights]);
   const totalOk = Math.abs(total - 100) < 0.01;
 
   return (

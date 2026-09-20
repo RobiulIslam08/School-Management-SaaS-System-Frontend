@@ -21,7 +21,9 @@ import { useI18n } from "@/lib/i18n";
 type StudentRow = {
   _id: string;
   name: string;
+  nameBn?: string;
   studentId: string;
+  photoUrl?: string;
   phone?: string;
   section?: string;
   status?: string;
@@ -162,8 +164,40 @@ function StudentsInner() {
         selectedIds={selected}
         onToggle={(id) => setSelected((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]))}
         columns={[
+          {
+            header: t.students.photo,
+            cell: (row) => (
+              <div className="flex items-center justify-center">
+                <Link
+                  href={`/students/${row._id}`}
+                  className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/80 bg-primary/10 text-xs font-semibold text-primary shadow-xs transition hover:scale-105 hover:ring-2 hover:ring-primary/40"
+                  title={row.name}
+                >
+                  {row.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={row.photoUrl} alt={row.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <span>{row.name.trim().slice(0, 1).toUpperCase()}</span>
+                  )}
+                </Link>
+              </div>
+            ),
+            align: "center",
+            className: "w-16",
+          },
           { header: t.students.id, cell: (row) => row.studentId, sortValue: (row) => row.studentId },
-          { header: t.common.name, cell: (row) => row.name, sortValue: (row) => row.name },
+          {
+            header: t.common.name,
+            cell: (row) => (
+              <div>
+                <Link href={`/students/${row._id}`} className="font-medium text-foreground hover:text-primary hover:underline">
+                  {row.name}
+                </Link>
+                {row.nameBn ? <p className="text-xs text-muted-foreground">{row.nameBn}</p> : null}
+              </div>
+            ),
+            sortValue: (row) => `${row.name} ${row.nameBn ?? ""}`,
+          },
           {
             header: t.common.class,
             cell: (row) => `${row.classId?.name ?? "—"} ${row.section ?? ""}`.trim(),
@@ -181,11 +215,30 @@ function StudentsInner() {
           { label: t.common.edit, onClick: () => router.push(`/students/${row._id}?edit=1`) },
         ]}
         mobileCard={(row) => (
-          <div>
-            <p className="font-medium">{row.name}</p>
-            <p className="text-sm text-muted-foreground">
-              {row.studentId} · {row.classId?.name} {row.section}
-            </p>
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/students/${row._id}`}
+              className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-primary/10 text-sm font-semibold text-primary shadow-xs"
+            >
+              {row.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={row.photoUrl} alt={row.name} className="h-full w-full object-cover" />
+              ) : (
+                <span>{row.name.trim().slice(0, 1).toUpperCase()}</span>
+              )}
+            </Link>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <Link href={`/students/${row._id}`} className="truncate font-medium text-foreground hover:text-primary hover:underline">
+                  {row.name}
+                </Link>
+                <StatusBadge label={statusLabel(t, row.status)} tone={studentStatusTone(row.status)} />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {row.studentId} · {row.classId?.name ?? "—"} {row.section ?? ""}
+              </p>
+              {row.phone ? <p className="text-xs text-muted-foreground">{row.phone}</p> : null}
+            </div>
           </div>
         )}
       />

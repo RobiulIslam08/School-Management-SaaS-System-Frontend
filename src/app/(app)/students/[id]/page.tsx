@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { toastApiResult } from "@/lib/toast-api";
 import { Sheet } from "@/components/dialog";
 import { PageHeader } from "@/components/page-header";
@@ -67,11 +68,13 @@ function StudentProfileInner() {
   const { data: classes } = useGetClassesQuery();
   const [updateStudent, { isLoading: saving }] = useUpdateStudentMutation();
   const student = data?.data as Student | undefined;
+  const PHOTO_MAX_BYTES = 300 * 1024;
   const [open, setOpen] = useState(search.get("edit") === "1");
   const [familyLabel, setFamilyLabel] = useState("");
   const [form, setForm] = useState({
     name: "",
     nameBn: "",
+    photoUrl: "",
     phone: "",
     classId: "",
     section: "A",
@@ -98,6 +101,7 @@ function StudentProfileInner() {
     setForm({
       name: student.name ?? "",
       nameBn: student.nameBn ?? "",
+      photoUrl: student.photoUrl ?? "",
       phone: student.phone ?? "",
       classId: student.classId?._id ?? "",
       section: student.section ?? "A",
@@ -109,6 +113,19 @@ function StudentProfileInner() {
     });
     if (search.get("edit") === "1") setOpen(true);
   }, [search, student]);
+
+  function onPhoto(file: File | undefined) {
+    if (!file) return;
+    if (file.size > PHOTO_MAX_BYTES) {
+      toast.error(t.students.photoTooLarge);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") setForm((prev) => ({ ...prev, photoUrl: reader.result as string }));
+    };
+    reader.readAsDataURL(file);
+  }
 
   function applyClass(nextLabel: string, nextGroup: string) {
     const resolved = resolveClassMember(classList, nextLabel, nextGroup);
@@ -214,6 +231,7 @@ function StudentProfileInner() {
               id: student._id,
               name: form.name,
               nameBn: form.nameBn,
+              photoUrl: form.photoUrl,
               phone: form.phone,
               classId: form.classId || undefined,
               section: form.section,
@@ -229,6 +247,26 @@ function StudentProfileInner() {
             if (toastApiResult(result, t.common.save, t.common.loadError)) setOpen(false);
           }}
         >
+          <div className="flex items-center gap-4 rounded-xl border border-border bg-muted/30 p-3">
+            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-background text-base font-semibold text-primary shadow-xs">
+              {form.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={form.photoUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span>{form.name.slice(0, 1) || "S"}</span>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <label className="text-xs font-medium text-foreground">{t.students.photo}</label>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="mt-1 block w-full text-xs text-muted-foreground file:mr-2 file:rounded-md file:border file:border-border file:bg-background file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-foreground hover:file:bg-muted"
+                onChange={(e) => onPhoto(e.target.files?.[0])}
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">{t.students.photoHint}</p>
+            </div>
+          </div>
           <Field label={t.students.nameEn}>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </Field>
