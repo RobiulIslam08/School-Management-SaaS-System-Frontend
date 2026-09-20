@@ -9,6 +9,7 @@ import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state"
 import { Button, Card, Field, Input, Select } from "@/components/ui";
 import { useCreateLedgerMutation, useGetFeeSummaryQuery, useGetLedgersQuery, useGetStudentsQuery } from "@/lib/api/schoolApi";
 import { useI18n } from "@/lib/i18n";
+import { parseNumberOrZero } from "@/lib/number-input";
 
 type LedgerRow = {
   _id: string;
@@ -32,7 +33,7 @@ function DuesInner() {
   const { data, isLoading, isError, refetch } = useGetLedgersQuery(presetStudent ? { studentId: presetStudent } : undefined);
   const { data: students } = useGetStudentsQuery();
   const [createLedger] = useCreateLedgerMutation();
-  const [form, setForm] = useState({ studentId: presetStudent, title: "Tuition", dueAmount: 0, academicYear: "2026" });
+  const [form, setForm] = useState({ studentId: presetStudent, title: "Tuition", dueAmount: "" as string | number, academicYear: "2026" });
   const studentList = (students?.data ?? []) as Array<{ _id: string; name: string }>;
   const rows = ((data?.data ?? []) as LedgerRow[]).filter((row) => remaining(row) > 0);
 
@@ -61,7 +62,11 @@ function DuesInner() {
         className="md:grid-cols-4"
         onSubmit={async (e) => {
           e.preventDefault();
-          toastApiResult(await createLedger(form), t.fees.addDue, t.common.loadError);
+          toastApiResult(
+            await createLedger({ ...form, dueAmount: parseNumberOrZero(form.dueAmount) }),
+            t.fees.addDue,
+            t.common.loadError
+          );
         }}
       >
         <Field label={t.common.student}>
@@ -78,7 +83,11 @@ function DuesInner() {
           <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
         </Field>
         <Field label={t.fees.due}>
-          <Input type="number" value={form.dueAmount} onChange={(e) => setForm({ ...form, dueAmount: Number(e.target.value) })} />
+          <Input
+            type="number"
+            value={form.dueAmount}
+            onChange={(e) => setForm({ ...form, dueAmount: e.target.value === "" ? "" : Number(e.target.value) })}
+          />
         </Field>
         <Button type="submit">{t.fees.addDue}</Button>
       </FormPanel>

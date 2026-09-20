@@ -34,7 +34,16 @@ export default function SubjectsPage() {
   const [deleteSubject] = useDeleteSubjectMutation();
   const [reorder] = useReorderSubjectsMutation();
   const [assignTeacher] = useAssignSubjectTeacherMutation();
-  const [form, setForm] = useState({ name: "", code: "", cq: 60, mcq: 40, practical: 0, attendance: 0, group: "Common", compulsory: true });
+  const [form, setForm] = useState({
+    name: "",
+    code: "",
+    cq: 60 as string | number,
+    mcq: 40 as string | number,
+    practical: "" as string | number,
+    attendance: "" as string | number,
+    group: "Common",
+    compulsory: true,
+  });
   const [edit, setEdit] = useState<SubjectRow | null>(null);
   const [removeId, setRemoveId] = useState<string | null>(null);
   const rows = ((data?.data ?? []) as SubjectRow[]).slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
@@ -74,7 +83,12 @@ export default function SubjectsPage() {
             classId,
             group: form.group,
             compulsory: form.compulsory,
-            markDistribution: { cq: form.cq, mcq: form.mcq, practical: form.practical, attendance: form.attendance },
+            markDistribution: {
+              cq: Number(form.cq) || 0,
+              mcq: Number(form.mcq) || 0,
+              practical: Number(form.practical) || 0,
+              attendance: Number(form.attendance) || 0,
+            },
           });
           if (toastApiResult(result, t.common.add, t.common.loadError)) {
             setForm({ ...form, name: "", code: "" });
@@ -91,9 +105,9 @@ export default function SubjectsPage() {
             <option value="Humanities">Humanities</option>
           </Select>
         </Field>
-        <Field label="CQ"><Input type="number" value={form.cq} onChange={(e) => setForm({ ...form, cq: Number(e.target.value) })} /></Field>
-        <Field label="MCQ"><Input type="number" value={form.mcq} onChange={(e) => setForm({ ...form, mcq: Number(e.target.value) })} /></Field>
-        <Field label={t.results.practical}><Input type="number" value={form.practical} onChange={(e) => setForm({ ...form, practical: Number(e.target.value) })} /></Field>
+        <Field label="CQ"><Input type="number" value={form.cq} onChange={(e) => setForm({ ...form, cq: e.target.value === "" ? "" : Number(e.target.value) })} /></Field>
+        <Field label="MCQ"><Input type="number" value={form.mcq} onChange={(e) => setForm({ ...form, mcq: e.target.value === "" ? "" : Number(e.target.value) })} /></Field>
+        <Field label={t.results.practical}><Input type="number" value={form.practical} onChange={(e) => setForm({ ...form, practical: e.target.value === "" ? "" : Number(e.target.value) })} /></Field>
         <Field label={t.common.compulsory}>
           <Select value={form.compulsory ? "yes" : "no"} onChange={(e) => setForm({ ...form, compulsory: e.target.value === "yes" })}>
             <option value="yes">{t.common.compulsory}</option>

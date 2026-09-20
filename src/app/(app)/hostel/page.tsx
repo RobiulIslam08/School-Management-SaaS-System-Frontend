@@ -15,7 +15,7 @@ import { useI18n } from "@/lib/i18n";
 
 type HostelRow = { _id: string; name: string; type: string; capacity: number; occupied: number; warden?: string };
 
-const emptyForm = { name: "", type: "boys", capacity: 40, occupied: 0, warden: "" };
+const emptyForm = { name: "", type: "boys", capacity: 40 as string | number, occupied: "" as string | number, warden: "" };
 
 export default function HostelPage() {
   const { t } = useI18n();
@@ -40,8 +40,8 @@ export default function HostelPage() {
     return {
       name: form.name,
       type: form.type,
-      capacity: Number(form.capacity),
-      occupied: Number(form.occupied),
+      capacity: Number(form.capacity) || 0,
+      occupied: Number(form.occupied) || 0,
       warden: form.warden,
     };
   }
@@ -125,8 +125,8 @@ export default function HostelPage() {
               <option value="girls">{t.hostel.girls}</option>
             </Select>
           </Field>
-          <Field label={t.hostel.capacity}><Input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })} /></Field>
-          <Field label={t.hostel.occupied}><Input type="number" value={form.occupied} onChange={(e) => setForm({ ...form, occupied: Number(e.target.value) })} /></Field>
+          <Field label={t.hostel.capacity}><Input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value === "" ? "" : Number(e.target.value) })} /></Field>
+          <Field label={t.hostel.occupied}><Input type="number" value={form.occupied} onChange={(e) => setForm({ ...form, occupied: e.target.value === "" ? "" : Number(e.target.value) })} /></Field>
           <Field label={t.hostel.warden}><Input value={form.warden} onChange={(e) => setForm({ ...form, warden: e.target.value })} /></Field>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => { setOpen(false); setEdit(null); }}>{t.common.cancel}</Button>

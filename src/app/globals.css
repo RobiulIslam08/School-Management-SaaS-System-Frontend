@@ -36,17 +36,58 @@ body {
 }
 
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
   .no-print {
     display: none !important;
   }
+
+  html,
   body {
-    background: #fff;
+    background: #fff !important;
+    height: auto !important;
+    overflow: visible !important;
   }
+
+  /* Collapse app chrome spacing so only the form fills the page */
   main {
     padding: 0 !important;
+    margin: 0 !important;
   }
+
+  .admission-print-root {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   .marksheet-sheet {
-    break-inside: avoid;
     box-shadow: none !important;
+  }
+
+  .admission-sheet {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    page-break-inside: auto;
+    break-inside: auto;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .admission-sheet .admission-cell > div:first-child {
+    background: #f3f0ea !important;
+  }
+
+  /* Hide toast / portals that can add blank pages */
+  [data-sonner-toaster],
+  nextjs-portal {
+    display: none !important;
   }
 }

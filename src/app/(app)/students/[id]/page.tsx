@@ -25,6 +25,8 @@ type Student = {
   phone?: string;
   email?: string;
   gender?: string;
+  photoUrl?: string;
+  birthRegNo?: string;
   bloodGroup?: string;
   religion?: string;
   section?: string;
@@ -36,7 +38,18 @@ type Student = {
   talentTags?: string[];
   classId?: { _id?: string; name?: string; sections?: unknown; group?: string };
   address?: { division?: string; district?: string; upazila?: string; area?: string; road?: string; holding?: string; block?: string };
-  guardian?: { fatherName?: string; motherName?: string; phone?: string; nid?: string; occupation?: string; relation?: string };
+  guardian?: {
+    fatherName?: string;
+    fatherNameBn?: string;
+    motherName?: string;
+    motherNameBn?: string;
+    guardianName?: string;
+    guardianNameBn?: string;
+    phone?: string;
+    nid?: string;
+    occupation?: string;
+    relation?: string;
+  };
 };
 
 function statusLabel(t: ReturnType<typeof useI18n>["t"], status?: string) {
@@ -128,6 +141,24 @@ function StudentProfileInner() {
           </>
         }
       />
+      <div className="mb-4 flex items-start gap-4">
+        {student.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={student.photoUrl} alt="" className="h-28 w-24 rounded-md border object-cover" />
+        ) : (
+          <div className="flex h-28 w-24 items-center justify-center rounded-md border bg-muted text-2xl font-semibold text-primary">
+            {student.name.slice(0, 1)}
+          </div>
+        )}
+        <div className="text-sm text-muted-foreground">
+          <p>
+            {t.students.birthRegNo}: {student.birthRegNo || "—"}
+          </p>
+          <p>
+            {t.students.nameBn}: {student.nameBn || "—"}
+          </p>
+        </div>
+      </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <h2 className="font-semibold">{t.students.contact}</h2>
@@ -140,7 +171,13 @@ function StudentProfileInner() {
         <Card>
           <h2 className="font-semibold">{t.common.guardian}</h2>
           <p className="mt-2 text-sm">
-            {student.guardian?.fatherName || "—"} · {t.common.relation}: {student.guardian?.relation || "—"} · {student.guardian?.phone || "—"}
+            {student.guardian?.fatherName || "—"}
+            {student.guardian?.fatherNameBn ? ` / ${student.guardian.fatherNameBn}` : ""} · {t.common.relation}:{" "}
+            {student.guardian?.relation || "—"} · {student.guardian?.phone || "—"}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {t.common.mother}: {student.guardian?.motherName || "—"}
+            {student.guardian?.motherNameBn ? ` / ${student.guardian.motherNameBn}` : ""}
           </p>
           <p className="text-sm text-muted-foreground">NID: {student.guardian?.nid || "—"}</p>
           <p className="text-sm">{student.guardian?.occupation || ""}</p>

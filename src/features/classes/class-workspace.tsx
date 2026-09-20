@@ -35,7 +35,7 @@ export function ClassWorkspace({
   const [saveRoutine] = useSaveRoutineMutation();
   const [deleteRoutine] = useDeleteRoutineMutation();
   const [tab, setTab] = useState("sections");
-  const [sectionForm, setSectionForm] = useState({ name: "", capacity: 0, classTeacherId: "" });
+  const [sectionForm, setSectionForm] = useState({ name: "", capacity: "" as string | number, classTeacherId: "" });
   const [removeName, setRemoveName] = useState<string | null>(null);
   const [targetClassId, setTargetClassId] = useState("");
   const [targetSection, setTargetSection] = useState("A");
@@ -70,16 +70,27 @@ export function ClassWorkspace({
             onSubmit={async (e) => {
               e.preventDefault();
               if (!sectionForm.name) return;
-              const result = await saveSection({ id: classId, ...sectionForm, classTeacherId: sectionForm.classTeacherId || undefined });
+              const result = await saveSection({
+                id: classId,
+                name: sectionForm.name,
+                capacity: Number(sectionForm.capacity) || 0,
+                classTeacherId: sectionForm.classTeacherId || undefined,
+              });
               toastApiResult(result, t.classes.addSection, t.common.loadError);
-              setSectionForm({ name: "", capacity: 0, classTeacherId: "" });
+              setSectionForm({ name: "", capacity: "", classTeacherId: "" });
             }}
           >
             <Field label={t.classes.sections}>
               <Input value={sectionForm.name} onChange={(e) => setSectionForm({ ...sectionForm, name: e.target.value })} />
             </Field>
             <Field label={t.common.capacity}>
-              <Input type="number" value={sectionForm.capacity} onChange={(e) => setSectionForm({ ...sectionForm, capacity: Number(e.target.value) })} />
+              <Input
+                type="number"
+                value={sectionForm.capacity}
+                onChange={(e) =>
+                  setSectionForm({ ...sectionForm, capacity: e.target.value === "" ? "" : Number(e.target.value) })
+                }
+              />
             </Field>
             <Field label={t.classes.classTeacher}>
               <Select value={sectionForm.classTeacherId} onChange={(e) => setSectionForm({ ...sectionForm, classTeacherId: e.target.value })}>

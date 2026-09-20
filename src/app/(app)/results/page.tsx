@@ -17,6 +17,10 @@ import {
 } from "@/lib/api/schoolApi";
 import { sectionNames } from "@/lib/sections";
 import { useI18n } from "@/lib/i18n";
+import { parseNumberOrZero } from "@/lib/number-input";
+
+type MarkDraft = { cq: string | number; mcq: string | number; practical: string | number; attendance: string | number };
+const emptyMarks = (): MarkDraft => ({ cq: "", mcq: "", practical: "", attendance: "" });
 
 type ResultRow = {
   _id: string;
@@ -43,7 +47,7 @@ export default function ResultsPage() {
   const { data: subjects } = useGetSubjectsQuery(classId || undefined);
   const [saveResult] = useSaveResultMutation();
   const [merit] = useRecomputeMeritMutation();
-  const [draft, setDraft] = useState<Record<string, { cq: number; mcq: number; practical: number; attendance: number }>>({});
+  const [draft, setDraft] = useState<Record<string, MarkDraft>>({});
 
   const classList = (classes?.data ?? []) as Array<{ _id: string; name: string; sections?: unknown }>;
   const sections = sectionNames(classList.find((item) => item._id === classId)?.sections as never);
@@ -64,8 +68,20 @@ export default function ResultsPage() {
 
   async function saveCell(studentId: string) {
     if (!examTypeId || !subjectId) return;
-    const marks = draft[studentId] ?? { cq: 0, mcq: 0, practical: 0, attendance: 0 };
-    const result = await saveResult({ studentId, examTypeId, subjectMarks: [{ subjectId, ...marks }] });
+    const marks = draft[studentId] ?? emptyMarks();
+    const result = await saveResult({
+      studentId,
+      examTypeId,
+      subjectMarks: [
+        {
+          subjectId,
+          cq: parseNumberOrZero(marks.cq),
+          mcq: parseNumberOrZero(marks.mcq),
+          practical: parseNumberOrZero(marks.practical),
+          attendance: parseNumberOrZero(marks.attendance),
+        },
+      ],
+    });
     toastApiResult(result, t.results.saveMarks, t.common.loadError);
   }
 
@@ -123,7 +139,7 @@ export default function ResultsPage() {
             </thead>
             <tbody>
               {studentList.map((student) => {
-                const marks = draft[student._id] ?? { cq: 0, mcq: 0, practical: 0, attendance: 0 };
+                const marks = draft[student._id] ?? emptyMarks();
                 const saved = resultByStudent.get(student._id);
                 return (
                   <tr key={student._id} className="border-t">
@@ -134,7 +150,12 @@ export default function ResultsPage() {
                           type="number"
                           className="h-10"
                           value={marks[key]}
-                          onChange={(e) => setDraft((prev) => ({ ...prev, [student._id]: { ...marks, [key]: Number(e.target.value) } }))}
+                          onChange={(e) =>
+                            setDraft((prev) => ({
+                              ...prev,
+                              [student._id]: { ...marks, [key]: e.target.value === "" ? "" : Number(e.target.value) },
+                            }))
+                          }
                           onBlur={() => saveCell(student._id)}
                         />
                       </td>

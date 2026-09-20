@@ -70,7 +70,7 @@ export default function ExamsPage() {
   const [removeId, setRemoveId] = useState<string | null>(null);
   const exams = useMemo(() => (data?.data ?? []) as ExamRow[], [data?.data]);
   const ruleList = useMemo(() => (rules?.data ?? []) as RuleRow[], [rules?.data]);
-  const [weights, setWeights] = useState<Record<string, number>>({});
+  const [weights, setWeights] = useState<Record<string, number | "">>({});
   const duplicates = duplicateExamLabels(exams);
   const year = exams[0]?.academicYear ?? exam.academicYear;
   const activeRule = matchingRule(ruleList, year, formulaClassId);
@@ -78,11 +78,11 @@ export default function ExamsPage() {
   useEffect(() => {
     if (!exams.length) return;
     const active = matchingRule(ruleList, exams[0]?.academicYear ?? "", formulaClassId);
-    const next: Record<string, number> = {};
+    const next: Record<string, number | ""> = {};
     exams.forEach((item, index) => {
       const match = active?.weights.find((row) => examWeightId(row.examTypeId) === item._id);
       if (match) next[item._id] = match.weight;
-      else if (active) next[item._id] = 0;
+      else if (active) next[item._id] = "";
       else {
         const equal = Math.floor(100 / exams.length);
         next[item._id] = index === exams.length - 1 ? 100 - equal * (exams.length - 1) : equal;
@@ -178,8 +178,13 @@ export default function ExamsPage() {
                     type="number"
                     min={0}
                     max={100}
-                    value={weights[item._id] ?? 0}
-                    onChange={(e) => setWeights((prev) => ({ ...prev, [item._id]: Number(e.target.value) }))}
+                    value={weights[item._id] ?? ""}
+                    onChange={(e) =>
+                      setWeights((prev) => ({
+                        ...prev,
+                        [item._id]: e.target.value === "" ? "" : Number(e.target.value),
+                      }))
+                    }
                   />
                 </Field>
               </div>

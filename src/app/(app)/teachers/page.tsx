@@ -27,7 +27,7 @@ type TeacherRow = {
   subjects?: Array<{ name?: string }>;
 };
 
-const emptyForm = { name: "", phone: "", email: "", designation: "Teacher", basic: 0, house: 0, medical: 0, other: 0 };
+const emptyForm = { name: "", phone: "", email: "", designation: "Teacher", basic: "" as string | number, house: "" as string | number, medical: "" as string | number, other: "" as string | number };
 
 export default function TeachersPage() {
   const { t } = useI18n();
@@ -51,7 +51,12 @@ export default function TeachersPage() {
       phone: form.phone,
       email: form.email,
       designation: form.designation,
-      salaryStructure: { basic: Number(form.basic), house: Number(form.house), medical: Number(form.medical), other: Number(form.other) },
+      salaryStructure: {
+        basic: Number(form.basic) || 0,
+        house: Number(form.house) || 0,
+        medical: Number(form.medical) || 0,
+        other: Number(form.other) || 0,
+      },
     };
   }
 
@@ -100,10 +105,10 @@ export default function TeachersPage() {
                 phone: row.phone ?? "",
                 email: row.email ?? "",
                 designation: row.designation ?? "Teacher",
-                basic: row.salaryStructure?.basic ?? 0,
-                house: row.salaryStructure?.house ?? 0,
-                medical: row.salaryStructure?.medical ?? 0,
-                other: row.salaryStructure?.other ?? 0,
+                basic: row.salaryStructure?.basic ?? "",
+                house: row.salaryStructure?.house ?? "",
+                medical: row.salaryStructure?.medical ?? "",
+                other: row.salaryStructure?.other ?? "",
               });
             },
           },
@@ -129,8 +134,8 @@ export default function TeachersPage() {
           <Field label={t.common.phone}><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
           <Field label={t.common.email}><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
           <Field label={t.teachers.designation}><Input value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} /></Field>
-          <Field label={t.teachers.basic}><Input type="number" value={form.basic} onChange={(e) => setForm({ ...form, basic: Number(e.target.value) })} /></Field>
-          <Field label={t.teachers.house}><Input type="number" value={form.house} onChange={(e) => setForm({ ...form, house: Number(e.target.value) })} /></Field>
+          <Field label={t.teachers.basic}><Input type="number" value={form.basic} onChange={(e) => setForm({ ...form, basic: e.target.value === "" ? "" : Number(e.target.value) })} /></Field>
+          <Field label={t.teachers.house}><Input type="number" value={form.house} onChange={(e) => setForm({ ...form, house: e.target.value === "" ? "" : Number(e.target.value) })} /></Field>
           <div className="md:col-span-2 flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setCreateOpen(false)}>{t.common.cancel}</Button>
             <Button type="submit">{t.common.add}</Button>
@@ -150,10 +155,10 @@ export default function TeachersPage() {
           <Field label={t.common.name}><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
           <Field label={t.common.phone}><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
           <Field label={t.teachers.designation}><Input value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} /></Field>
-          <Field label={t.teachers.basic}><Input type="number" value={form.basic} onChange={(e) => setForm({ ...form, basic: Number(e.target.value) })} /></Field>
-          <Field label={t.teachers.house}><Input type="number" value={form.house} onChange={(e) => setForm({ ...form, house: Number(e.target.value) })} /></Field>
-          <Field label={t.teachers.medical}><Input type="number" value={form.medical} onChange={(e) => setForm({ ...form, medical: Number(e.target.value) })} /></Field>
-          <Field label={t.teachers.other}><Input type="number" value={form.other} onChange={(e) => setForm({ ...form, other: Number(e.target.value) })} /></Field>
+          <Field label={t.teachers.basic}><Input type="number" value={form.basic} onChange={(e) => setForm({ ...form, basic: e.target.value === "" ? "" : Number(e.target.value) })} /></Field>
+          <Field label={t.teachers.house}><Input type="number" value={form.house} onChange={(e) => setForm({ ...form, house: e.target.value === "" ? "" : Number(e.target.value) })} /></Field>
+          <Field label={t.teachers.medical}><Input type="number" value={form.medical} onChange={(e) => setForm({ ...form, medical: e.target.value === "" ? "" : Number(e.target.value) })} /></Field>
+          <Field label={t.teachers.other}><Input type="number" value={form.other} onChange={(e) => setForm({ ...form, other: e.target.value === "" ? "" : Number(e.target.value) })} /></Field>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="secondary" onClick={() => setEdit(null)}>{t.common.cancel}</Button>
             <Button disabled={saving} type="submit">{t.common.save}</Button>

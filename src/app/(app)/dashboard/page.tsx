@@ -113,16 +113,20 @@ export default function DashboardPage() {
             <Feed title={t.dashboard.upcoming} items={(stats.upcoming ?? []).map((item) => ({ ...item, meta: new Date(item.at).toLocaleDateString() }))} />
             <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
               <h3 className="text-lg font-medium">{t.dashboard.topPerformers}</h3>
-              <ul className="mt-3 space-y-2">
-                {(stats.topPerformers ?? []).map((row) => (
-                  <li key={row.id}>
-                    <Link href={`/students/${row.id}`} className="flex justify-between text-sm hover:text-primary">
-                      <span>{row.name}</span>
-                      <span className="tabular-nums text-muted-foreground">{row.gpa}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              {(stats.topPerformers ?? []).length === 0 ? (
+                <p className="mt-3 text-sm text-muted-foreground">{t.dashboard.topPerformersEmpty}</p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {(stats.topPerformers ?? []).map((row, index) => (
+                    <li key={`${row.id}-${row.studentId}-${index}`}>
+                      <Link href={`/students/${row.id}`} className="flex justify-between text-sm hover:text-primary">
+                        <span>{row.name}</span>
+                        <span className="tabular-nums text-muted-foreground">{row.gpa}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>

@@ -40,7 +40,10 @@ export interface NavGroup {
 export const NAV_GROUPS: NavGroup[] = [
   {
     titleKey: "overview",
-    items: [{ href: "/dashboard", labelKey: "dashboard" }],
+    items: [
+      { href: "/dashboard", labelKey: "dashboard" },
+      { href: "/students/admit", labelKey: "admit", feature: "admission" },
+    ],
   },
   {
     titleKey: "academic",
@@ -58,7 +61,6 @@ export const NAV_GROUPS: NavGroup[] = [
     titleKey: "people",
     items: [
       { href: "/students", labelKey: "students", feature: "students" },
-      { href: "/students/admit", labelKey: "admit", feature: "admission" },
       { href: "/teachers", labelKey: "teachers", feature: "teachers" },
       { href: "/staff", labelKey: "staff" },
     ],

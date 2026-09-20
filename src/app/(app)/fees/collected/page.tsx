@@ -8,6 +8,7 @@ import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state"
 import { Button, Card, Field, Input, Select } from "@/components/ui";
 import { useAddPaymentMutation, useGetFeeSummaryQuery, useGetLedgersQuery } from "@/lib/api/schoolApi";
 import { useI18n } from "@/lib/i18n";
+import { parseNumberOrZero } from "@/lib/number-input";
 
 const METHODS = ["Cash", "bKash", "Nagad", "Rocket", "Bank Transfer", "Cheque", "Other"];
 
@@ -30,7 +31,7 @@ export default function FeeCollectedPage() {
   const { data: summary } = useGetFeeSummaryQuery();
   const { data, isLoading, isError, refetch } = useGetLedgersQuery();
   const [addPayment] = useAddPaymentMutation();
-  const [pay, setPay] = useState({ id: "", amount: 0, method: "Cash", refNo: "" });
+  const [pay, setPay] = useState({ id: "", amount: "" as string | number, method: "Cash", refNo: "" });
   const allRows = (data?.data ?? []) as LedgerRow[];
   const openLedgers = allRows.filter((row) => remaining(row) > 0);
   const collectedRows = allRows.filter((row) => row.paidAmount > 0);
@@ -56,7 +57,11 @@ export default function FeeCollectedPage() {
         className="md:grid-cols-5"
         onSubmit={async (e) => {
           e.preventDefault();
-          toastApiResult(await addPayment(pay), t.fees.recordPay, t.common.loadError);
+          toastApiResult(
+            await addPayment({ ...pay, amount: parseNumberOrZero(pay.amount) }),
+            t.fees.recordPay,
+            t.common.loadError
+          );
         }}
       >
         <Field label={t.fees.ledger}>
@@ -70,7 +75,11 @@ export default function FeeCollectedPage() {
           </Select>
         </Field>
         <Field label={t.common.amount}>
-          <Input type="number" value={pay.amount} onChange={(e) => setPay({ ...pay, amount: Number(e.target.value) })} />
+          <Input
+            type="number"
+            value={pay.amount}
+            onChange={(e) => setPay({ ...pay, amount: e.target.value === "" ? "" : Number(e.target.value) })}
+          />
         </Field>
         <Field label={t.fees.methods}>
           <Select value={pay.method} onChange={(e) => setPay({ ...pay, method: e.target.value })}>

@@ -23,7 +23,7 @@ type RouteRow = {
   stops?: string[];
 };
 
-const emptyForm = { name: "", driverName: "", driverPhone: "", vehicleNo: "", fee: 0, stops: "" };
+const emptyForm = { name: "", driverName: "", driverPhone: "", vehicleNo: "", fee: "" as string | number, stops: "" };
 
 export default function TransportPage() {
   const { t } = useI18n();
@@ -44,7 +44,7 @@ export default function TransportPage() {
       driverName: form.driverName,
       driverPhone: form.driverPhone,
       vehicleNo: form.vehicleNo,
-      fee: Number(form.fee),
+      fee: Number(form.fee) || 0,
       stops: form.stops.split(",").map((item) => item.trim()).filter(Boolean),
     };
   }
@@ -85,7 +85,7 @@ export default function TransportPage() {
                 driverName: row.driverName ?? "",
                 driverPhone: row.driverPhone ?? "",
                 vehicleNo: row.vehicleNo ?? "",
-                fee: row.fee ?? 0,
+                fee: row.fee ?? "",
                 stops: (row.stops ?? []).join(", "),
               });
               setOpen(true);
@@ -111,7 +111,7 @@ export default function TransportPage() {
           <Field label={t.transport.driverPhone}><Input value={form.driverPhone} onChange={(e) => setForm({ ...form, driverPhone: e.target.value })} /></Field>
           <Field label={t.transport.vehicle}><Input value={form.vehicleNo} onChange={(e) => setForm({ ...form, vehicleNo: e.target.value })} /></Field>
           <Field label={t.transport.stops}><Input value={form.stops} onChange={(e) => setForm({ ...form, stops: e.target.value })} /></Field>
-          <Field label={t.transport.fee}><Input type="number" value={form.fee} onChange={(e) => setForm({ ...form, fee: Number(e.target.value) })} /></Field>
+          <Field label={t.transport.fee}><Input type="number" value={form.fee} onChange={(e) => setForm({ ...form, fee: e.target.value === "" ? "" : Number(e.target.value) })} /></Field>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => { setOpen(false); setEdit(null); }}>{t.common.cancel}</Button>
             <Button type="submit">{t.common.save}</Button>
