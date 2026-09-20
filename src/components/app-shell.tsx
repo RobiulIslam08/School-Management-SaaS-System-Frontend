@@ -8,7 +8,7 @@ import { useLogoutMutation, useMeQuery } from "@/lib/api/schoolApi";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { LanguageSwitch } from "./language-switch";
-import { NAV_GROUPS } from "./nav";
+import { canAccess, NAV_GROUPS } from "./nav";
 import { Button, Input } from "./ui";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -21,6 +21,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const session = data?.data;
   const features = session?.features ?? {};
+  const permissions = session?.user?.permissions ?? [];
+  const role = session?.user?.role ?? "";
   const authed = Boolean(session) && !isError;
   const primary = session?.settings?.theme?.primary ?? "#14532d";
 
@@ -28,9 +30,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     () =>
       NAV_GROUPS.map((group) => ({
         ...group,
-        items: group.items.filter((item) => !item.feature || features[item.feature]),
+        items: group.items.filter((item) => {
+          if (item.feature && !features[item.feature]) return false;
+          if (item.roles?.length && !item.roles.includes(role)) return false;
+          if (!canAccess(permissions, item.permission)) return false;
+          return true;
+        }),
       })).filter((group) => group.items.length),
-    [features]
+    [features, permissions, role]
   );
 
   return (
