@@ -12,7 +12,7 @@ import { Button, Card, Field, Select, Textarea } from "@/components/ui";
 import { useGetClassesQuery, useGetSmsQuery, useSendSmsMutation } from "@/lib/api/schoolApi";
 import { useI18n } from "@/lib/i18n";
 
-type SmsRow = { _id: string; to: string; body: string; status: string; audience?: string; createdAt?: string };
+type SmsRow = { _id: string; to: string; body: string; status: string; audience?: string; error?: string; createdAt?: string };
 
 function smsTone(status: string): "success" | "warning" | "danger" | "neutral" {
   if (status === "sent") return "success";
@@ -98,6 +98,11 @@ export default function SmsPage() {
             header: t.common.status,
             cell: (row) => <StatusBadge label={statusLabel(row.status)} tone={smsTone(row.status)} />,
             sortValue: (row) => row.status,
+          },
+          {
+            header: t.common.reason,
+            cell: (row) => (row.error ? <span className="text-xs text-red-700">{row.error}</span> : "—"),
+            sortValue: (row) => row.error ?? "",
           },
         ]}
       />

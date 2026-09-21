@@ -28,6 +28,10 @@ export default function SettingsPage() {
     logoUrl: "",
     primary: "#14532d",
     smsApiKey: "",
+    smsSenderId: "",
+    smsAdmissionEnabled: true,
+    smsAttendanceEnabled: true,
+    smsPayrollEnabled: true,
     defaultLanguage: "bn" as "bn" | "en",
   });
 
@@ -43,6 +47,10 @@ export default function SettingsPage() {
         logoUrl: data.data.logoUrl ?? "",
         primary: data.data.theme?.primary ?? "#14532d",
         smsApiKey: data.data.smsApiKey ?? "",
+        smsSenderId: data.data.smsSenderId ?? "",
+        smsAdmissionEnabled: data.data.smsAdmissionEnabled !== false,
+        smsAttendanceEnabled: data.data.smsAttendanceEnabled !== false,
+        smsPayrollEnabled: data.data.smsPayrollEnabled !== false,
         defaultLanguage: data.data.defaultLanguage ?? "bn",
       });
     }
@@ -76,6 +84,10 @@ export default function SettingsPage() {
       establishedYear: form.establishedYear ? Number(form.establishedYear) : null,
       logoUrl: form.logoUrl,
       smsApiKey: form.smsApiKey,
+      smsSenderId: form.smsSenderId,
+      smsAdmissionEnabled: form.smsAdmissionEnabled,
+      smsAttendanceEnabled: form.smsAttendanceEnabled,
+      smsPayrollEnabled: form.smsPayrollEnabled,
       defaultLanguage: form.defaultLanguage,
       theme: { primary: form.primary, radius: "0.75rem" },
     });
@@ -187,6 +199,38 @@ export default function SettingsPage() {
             <Button type="button" variant="ghost" className="h-9 px-2" onClick={() => setShowKey((v) => !v)}>
               {showKey ? t.common.hide : t.common.show}
             </Button>
+            <Field label={t.settings.smsSenderId}>
+              <Input
+                value={form.smsSenderId}
+                onChange={(e) => setForm({ ...form, smsSenderId: e.target.value })}
+                placeholder="88096…"
+                autoComplete="off"
+              />
+            </Field>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.smsAdmissionEnabled}
+                onChange={(e) => setForm({ ...form, smsAdmissionEnabled: e.target.checked })}
+              />
+              {t.settings.smsAdmission}
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.smsAttendanceEnabled}
+                onChange={(e) => setForm({ ...form, smsAttendanceEnabled: e.target.checked })}
+              />
+              {t.settings.smsAttendance}
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.smsPayrollEnabled}
+                onChange={(e) => setForm({ ...form, smsPayrollEnabled: e.target.checked })}
+              />
+              {t.settings.smsPayroll}
+            </label>
             <p className="text-xs text-muted-foreground">{t.settings.smsHint}</p>
           </>
         ) : null}

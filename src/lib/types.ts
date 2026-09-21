@@ -19,6 +19,10 @@ export interface SchoolSettings {
   theme: { primary: string; radius: string };
   academicYear: string;
   smsApiKey?: string;
+  smsSenderId?: string;
+  smsAdmissionEnabled?: boolean;
+  smsAttendanceEnabled?: boolean;
+  smsPayrollEnabled?: boolean;
   defaultLanguage: "bn" | "en";
 }
 
