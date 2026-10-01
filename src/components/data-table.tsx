@@ -84,9 +84,9 @@ export function DataTable<T>({
         />
       ) : null}
       {mobileCard ? (
-        <div className="grid gap-3 md:hidden">
+        <div className="grid min-w-0 gap-3 md:hidden">
           {visible.map((row) => (
-            <div key={rowKey(row)} className="rounded-xl border border-border bg-white p-4 shadow-sm">
+            <div key={rowKey(row)} className="min-w-0 rounded-xl border border-border bg-white p-4 shadow-sm">
               {mobileCard(row)}
               {actions ? <div className="mt-3">{<DropdownMenu actions={actions(row)} />}</div> : null}
             </div>

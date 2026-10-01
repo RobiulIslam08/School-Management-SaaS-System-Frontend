@@ -129,6 +129,62 @@ body {
     padding: 0 !important;
   }
 
+  /* Admission slip: one A4 page, signatures at the bottom */
+  html:has(.admission-print-root),
+  body:has(.admission-print-root) {
+    height: 277mm !important;
+    overflow: hidden !important;
+  }
+
+  body:has(.admission-print-root) * {
+    visibility: hidden !important;
+  }
+
+  body:has(.admission-print-root) .admission-sheet,
+  body:has(.admission-print-root) .admission-sheet * {
+    visibility: visible !important;
+  }
+
+  body:has(.admission-print-root) .admission-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 277mm !important;
+    max-height: 277mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  body:has(.admission-print-root) .admission-frame,
+  body:has(.admission-print-root) .admission-inner {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+  }
+
+  body:has(.admission-print-root) .admission-signs {
+    margin-top: auto !important;
+  }
+
+  body:has(.admission-print-root) .no-print,
+  body:has(.admission-print-root) .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body:has(.admission-print-root) .min-h-screen {
+    min-height: 0 !important;
+  }
+
   .marksheet-sheet {
     box-shadow: none !important;
   }
@@ -397,7 +453,51 @@ body {
     visibility: visible !important;
   }
 
+  @page fee-slip {
+    size: A4 portrait;
+    margin: 6mm;
+  }
+
   body:has(.fees-collected-page) .fee-receipt-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    page: fee-slip;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body:has(.fees-collected-page) .no-print,
+  body:has(.fees-collected-page) .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  @page staff-month {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+
+  .staff-register-sheet.monthly {
+    page: staff-month;
+  }
+
+  body:has(.staff-attendance-page):has(.staff-register-sheet) * {
+    visibility: hidden !important;
+  }
+
+  body:has(.staff-attendance-page) .staff-register-sheet,
+  body:has(.staff-attendance-page) .staff-register-sheet * {
+    visibility: visible !important;
+  }
+
+  body:has(.staff-attendance-page) .staff-register-sheet {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
@@ -409,8 +509,8 @@ body {
     print-color-adjust: exact;
   }
 
-  body:has(.fees-collected-page) .no-print,
-  body:has(.fees-collected-page) .no-print * {
+  body:has(.staff-attendance-page) .no-print,
+  body:has(.staff-attendance-page) .no-print * {
     display: none !important;
     visibility: hidden !important;
   }

@@ -43,7 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="relative min-h-screen bg-canvas" style={{ ["--primary" as string]: primary }}>
       {isLoading ? (
-        <div className="grid min-h-screen grid-cols-[16rem_1fr] no-print">
+        <div className="grid min-h-screen grid-cols-1 md:grid-cols-[16rem_1fr] no-print">
           <div className="animate-pulse bg-sidebar" />
           <div className="p-8">
             <div className="mb-6 h-10 w-64 animate-pulse rounded bg-muted" />
@@ -111,7 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       href={item.href}
                       onClick={() => setOpen(false)}
                       className={cn(
-                        "block rounded-md px-3 py-2 text-sm hover:bg-muted",
+                        "flex min-h-11 items-center rounded-md px-3 text-sm hover:bg-muted",
                         pathname === item.href && "bg-primary/10 font-medium text-primary"
                       )}
                     >
@@ -178,7 +178,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Button>
             </div>
           </header>
-          <main className="flex-1 p-4 md:p-8">{children}</main>
+          <main className="min-w-0 flex-1 p-4 md:p-8">{children}</main>
         </div>
       </div>
     </div>

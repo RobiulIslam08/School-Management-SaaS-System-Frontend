@@ -95,7 +95,7 @@ export function DropdownMenu({
         <Button
           type="button"
           variant="secondary"
-          className="h-9 px-3"
+          className="px-3"
           aria-expanded={open}
           onClick={(e) => {
             if (!open) updatePosition(e.currentTarget);

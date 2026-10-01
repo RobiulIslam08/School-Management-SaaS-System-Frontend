@@ -100,14 +100,14 @@ export function AdmissionFormDocument({
 
   return (
     <article
-      className="admission-sheet mx-auto w-full max-w-[210mm] bg-white text-foreground shadow-sm print:max-w-none print:shadow-none"
+      className="admission-sheet mx-auto w-full max-w-[210mm] bg-white text-foreground shadow-sm print:flex print:h-[277mm] print:max-h-[277mm] print:max-w-none print:flex-col print:overflow-hidden print:shadow-none"
       style={{ ["--admission-accent" as string]: accent }}
     >
-      <div className="border-[3px] border-foreground p-1 print:border-2">
-        <div className="border border-foreground/70 p-3 sm:p-3.5 print:p-2.5">
+      <div className="admission-frame border-[3px] border-foreground p-1 print:flex print:min-h-0 print:flex-1 print:flex-col print:border-2">
+        <div className="admission-inner border border-foreground/70 p-3 sm:p-3.5 print:flex print:min-h-0 print:flex-1 print:flex-col print:p-2.5">
           {/* Institutional header */}
-          <header className="relative grid grid-cols-[5rem_1fr_5rem] items-center gap-2.5 pb-2.5">
-            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-[color:var(--admission-accent)] bg-[#f8faf8]">
+          <header className="relative grid grid-cols-[3.25rem_minmax(0,1fr)_3.25rem] items-center gap-2 pb-2.5 sm:grid-cols-[5rem_minmax(0,1fr)_5rem] sm:gap-2.5">
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-[color:var(--admission-accent)] bg-[#f8faf8] sm:h-20 sm:w-20">
               {settings?.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={settings.logoUrl} alt="" className="h-full w-full object-contain p-1" />
@@ -140,7 +140,7 @@ export function AdmissionFormDocument({
               </p>
             </div>
 
-            <div className="relative h-20 w-20 overflow-hidden border-2 border-foreground bg-[#f8faf8]">
+            <div className="relative h-12 w-12 overflow-hidden border-2 border-foreground bg-[#f8faf8] sm:h-20 sm:w-20">
               {data.photoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={data.photoUrl} alt="" className="h-full w-full object-cover" />
@@ -199,7 +199,7 @@ export function AdmissionFormDocument({
           </p>
 
           {/* Signatures */}
-          <div className="mt-6 grid grid-cols-2 gap-10 print:mt-8">
+          <div className="admission-signs mt-6 grid grid-cols-2 gap-10 print:mt-auto">
             <div className="text-center">
               <div className="mx-auto mb-1 h-8 w-full max-w-[12rem] border-b border-foreground" />
               <p className="text-[11px] font-semibold">{t.common.guardian}</p>

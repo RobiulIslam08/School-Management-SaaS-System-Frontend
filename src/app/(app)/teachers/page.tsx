@@ -202,7 +202,6 @@ const emptyForm = {
   joiningDate: "",
   retirementDate: "",
   basic: "" as string | number,
-  medical: "" as string | number,
   other: "" as string | number,
   subjects: [] as string[],
 };
@@ -345,7 +344,7 @@ export default function TeachersPage() {
     reader.readAsDataURL(file);
   }
 
-  function salaryPayload() {
+  function salaryPayload(medical = 0) {
     return {
       name: form.name,
       phone: form.phone,
@@ -358,7 +357,7 @@ export default function TeachersPage() {
       salaryStructure: {
         basic: Number(form.basic) || 0,
         house: 0,
-        medical: Number(form.medical) || 0,
+        medical,
         other: Number(form.other) || 0,
       },
     };
@@ -471,7 +470,6 @@ export default function TeachersPage() {
                 joiningDate: row.joiningDate ? new Date(row.joiningDate).toISOString().slice(0, 10) : "",
                 retirementDate: row.retirementDate ? new Date(row.retirementDate).toISOString().slice(0, 10) : "",
                 basic: row.salaryStructure?.basic ?? "",
-                medical: row.salaryStructure?.medical ?? "",
                 other: row.salaryStructure?.other ?? "",
                 subjects: (row.subjects ?? []).map((s) => s._id).filter(Boolean) as string[],
               });
@@ -585,14 +583,6 @@ export default function TeachersPage() {
               placeholder="0"
             />
           </Field>
-          <Field label={t.teachers.medical}>
-            <Input
-              type="number"
-              value={form.medical}
-              onChange={(e) => setForm({ ...form, medical: e.target.value === "" ? "" : Number(e.target.value) })}
-              placeholder="0"
-            />
-          </Field>
           <Field label={t.teachers.joiningDate}>
             <Input
               type="date"
@@ -631,7 +621,10 @@ export default function TeachersPage() {
           onSubmit={async (e) => {
             e.preventDefault();
             if (!edit) return;
-            const result = await updateTeacher({ id: edit._id, ...salaryPayload() });
+            const result = await updateTeacher({
+              id: edit._id,
+              ...salaryPayload(edit.salaryStructure?.medical ?? 0),
+            });
             if (toastApiResult(result, t.common.save, t.common.loadError)) setEdit(null);
           }}
         >
@@ -679,14 +672,6 @@ export default function TeachersPage() {
               type="number"
               value={form.basic}
               onChange={(e) => setForm({ ...form, basic: e.target.value === "" ? "" : Number(e.target.value) })}
-              placeholder="0"
-            />
-          </Field>
-          <Field label={t.teachers.medical}>
-            <Input
-              type="number"
-              value={form.medical}
-              onChange={(e) => setForm({ ...form, medical: e.target.value === "" ? "" : Number(e.target.value) })}
               placeholder="0"
             />
           </Field>

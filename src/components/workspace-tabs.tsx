@@ -18,7 +18,7 @@ export function WorkspaceTabs({
           key={tab.id}
           type="button"
           className={cn(
-            "h-10 rounded px-4 text-sm font-medium",
+            "h-11 rounded px-4 text-sm font-medium",
             active === tab.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
           )}
           onClick={() => onChange(tab.id)}

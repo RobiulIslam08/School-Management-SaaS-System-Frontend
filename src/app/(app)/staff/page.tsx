@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Shield, Users } from "lucide-react";
+import { toast } from "sonner";
 import { toastApiResult } from "@/lib/toast-api";
 import { DataTable } from "@/components/data-table";
 import { ConfirmDialog, Dialog, Sheet } from "@/components/dialog";
@@ -95,6 +96,10 @@ export default function StaffPage() {
           className="space-y-3"
           onSubmit={async (e) => {
             e.preventDefault();
+            if (form.password.length < 8) {
+              toast.error(t.staff.passwordMin);
+              return;
+            }
             const result = await createUser(form);
             if (toastApiResult(result, t.common.add, t.common.loadError)) {
               setCreateOpen(false);
@@ -125,6 +130,10 @@ export default function StaffPage() {
           onSubmit={async (e) => {
             e.preventDefault();
             if (!edit) return;
+            if (form.password && form.password.length < 8) {
+              toast.error(t.staff.passwordMin);
+              return;
+            }
             const isSelf = String(edit._id) === meId;
             const result = await updateUser({
               id: edit._id,

@@ -259,7 +259,7 @@ export function MarksheetDocument({
               </table>
             </div>
 
-            <div className="mt-12 grid grid-cols-3 gap-6 text-center text-xs">
+            <div className="mt-8 grid grid-cols-1 gap-6 text-center text-xs sm:mt-12 sm:grid-cols-3">
               {[t.marksheets.classTeacher, t.marksheets.examController, t.marksheets.head].map((label) => (
                 <div key={label}>
                   <div className="mx-auto mb-2 h-8 max-w-[9rem] border-b border-foreground" />

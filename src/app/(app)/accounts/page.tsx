@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, Printer, Scale, TrendingDown, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { QueryError, TableSkeleton } from "@/components/query-state";
@@ -42,6 +42,8 @@ export default function AccountsPage() {
   const [year, setYear] = useState(String(now.getFullYear()));
   const [month, setMonth] = useState(String(now.getMonth() + 1).padStart(2, "0"));
   const [printMode, setPrintMode] = useState(false);
+  const [printNonce, setPrintNonce] = useState(0);
+  const sheetAnchor = useRef<HTMLDivElement | null>(null);
 
   const query = useMemo(
     () => ({
@@ -64,15 +66,15 @@ export default function AccountsPage() {
 
   const byCategory = summary?.expense?.byCategory ?? {};
 
-  useEffect(() => {
-    if (!printMode) return;
-    const id = window.setTimeout(() => window.print(), 200);
-    return () => window.clearTimeout(id);
-  }, [printMode]);
-
   function openPrint() {
     setPrintMode(true);
+    setPrintNonce((n) => n + 1);
   }
+
+  useEffect(() => {
+    if (!printNonce || !printMode || !summary) return;
+    sheetAnchor.current?.scrollIntoView({ behavior: "auto", block: "start" });
+  }, [printNonce, printMode, summary]);
 
   return (
     <div className="accounts-page">
@@ -274,7 +276,7 @@ export default function AccountsPage() {
       </div>
 
       {printMode && summary ? (
-        <div className="accounts-report-sheet mt-8">
+        <div ref={sheetAnchor} className="accounts-report-sheet mt-8 scroll-mt-20">
           <div className="no-print mb-4 flex justify-end gap-2">
             <Button type="button" onClick={() => window.print()}>
               <Printer size={16} className="mr-1.5" />
@@ -284,45 +286,126 @@ export default function AccountsPage() {
               {t.common.close}
             </Button>
           </div>
-          <div className="border border-foreground/70 bg-white p-8">
-            <h1 className="text-xl font-bold uppercase tracking-wide">{schoolName}</h1>
-            <p className="mt-1 text-lg font-semibold">{t.accounts.title}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {mode === "monthly" ? `${year}-${month}` : year}
-            </p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-3 text-sm">
-              <div>
-                <p className="text-muted-foreground">{t.accounts.income}</p>
-                <p className="text-xl font-bold tabular-nums">৳ {money(summary.income.total)}</p>
+          <article className="mx-auto max-w-[210mm] border-[3px] border-foreground bg-white text-foreground">
+            <div className="border border-foreground/70 p-3 sm:p-6">
+              <header className="grid grid-cols-[3.25rem_minmax(0,1fr)] items-center gap-3 border-b-2 border-foreground pb-4 sm:grid-cols-[4.5rem_minmax(0,1fr)] sm:gap-4">
+                <div className="flex h-[3.25rem] w-[3.25rem] items-center justify-center overflow-hidden rounded-full border-2 border-foreground sm:h-[4.5rem] sm:w-[4.5rem]">
+                  {settings?.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={settings.logoUrl} alt="" className="h-full w-full object-contain p-1" />
+                  ) : (
+                    <span className="text-2xl font-bold">{schoolName.slice(0, 1)}</span>
+                  )}
+                </div>
+                <div className="min-w-0 text-center">
+                  {settings?.motto ? <p className="text-[11px] italic text-muted-foreground">{settings.motto}</p> : null}
+                  <h1 className="break-words text-lg font-extrabold uppercase leading-tight tracking-wide sm:text-2xl">{schoolName}</h1>
+                  {settings?.address ? <p className="mt-1 text-sm">{settings.address}</p> : null}
+                  <p className="mt-1 text-xs">
+                    {settings?.eiin ? `${t.marksheets.eiin}: ${settings.eiin}` : null}
+                    {settings?.eiin && settings?.establishedYear ? "  ·  " : null}
+                    {settings?.establishedYear ? `Est. ${settings.establishedYear}` : null}
+                    {(settings?.eiin || settings?.establishedYear) && settings?.academicYear ? "  ·  " : null}
+                    {settings?.academicYear ? `${t.common.year}: ${settings.academicYear}` : null}
+                  </p>
+                </div>
+              </header>
+              <div className="mt-4 flex flex-col gap-2 border-b border-foreground/30 pb-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+                <div>
+                  <p className="text-lg font-bold uppercase tracking-[0.12em]">{t.accounts.title}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {mode === "monthly" ? `${year}-${month}` : year}
+                  </p>
+                </div>
+                <p className="text-sm font-semibold">
+                  {summary.net >= 0 ? t.accounts.surplus : t.accounts.deficit}
+                </p>
               </div>
-              <div>
-                <p className="text-muted-foreground">{t.accounts.expense}</p>
-                <p className="text-xl font-bold tabular-nums">৳ {money(summary.expense.total)}</p>
+              <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+                <div className="border border-foreground/30 px-3 py-2">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{t.accounts.income}</p>
+                  <p className="mt-1 text-base font-bold tabular-nums sm:text-lg">৳ {money(summary.income.total)}</p>
+                </div>
+                <div className="border border-foreground/30 px-3 py-2">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{t.accounts.expense}</p>
+                  <p className="mt-1 text-base font-bold tabular-nums sm:text-lg">৳ {money(summary.expense.total)}</p>
+                </div>
+                <div className="border border-foreground/30 px-3 py-2">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{t.accounts.net}</p>
+                  <p className="mt-1 text-base font-bold tabular-nums sm:text-lg">৳ {money(summary.net)}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-muted-foreground">{t.accounts.net}</p>
-                <p className="text-xl font-bold tabular-nums">৳ {money(summary.net)}</p>
+              <table className="mt-5 w-full text-sm">
+                <thead>
+                  <tr className="border-b-2 border-foreground text-left text-xs uppercase tracking-wider">
+                    <th className="py-2">{t.fees.titleField}</th>
+                    <th className="py-2 text-right">{t.fees.amount}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-foreground/20">
+                    <td className="py-2">{t.accounts.fromFees}</td>
+                    <td className="py-2 text-right tabular-nums">৳ {money(summary.income.fees)}</td>
+                  </tr>
+                  <tr className="border-b border-foreground/20">
+                    <td className="py-2">{t.accounts.fromDonations}</td>
+                    <td className="py-2 text-right tabular-nums">৳ {money(summary.income.donations)}</td>
+                  </tr>
+                  <tr className="border-b border-foreground/20">
+                    <td className="py-2">{t.accounts.operational}</td>
+                    <td className="py-2 text-right tabular-nums">৳ {money(summary.expense.operational)}</td>
+                  </tr>
+                  <tr className="border-b border-foreground/20">
+                    <td className="py-2">{t.accounts.payroll}</td>
+                    <td className="py-2 text-right tabular-nums">৳ {money(summary.expense.payroll)}</td>
+                  </tr>
+                  {Object.entries(byCategory)
+                    .filter(([, value]) => value > 0)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([cat, value]) => (
+                      <tr key={cat} className="border-b border-foreground/20">
+                        <td className="py-2 pl-4 text-muted-foreground">{categoryLabel(t, cat)}</td>
+                        <td className="py-2 text-right tabular-nums">৳ {money(value)}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+              {mode === "yearly" && summary.monthly?.length ? (
+                <div className="mt-6 overflow-x-auto print:overflow-visible">
+                <table className="w-full min-w-[20rem] text-sm print:min-w-0">
+                  <thead>
+                    <tr className="border-b-2 border-foreground text-left text-xs uppercase tracking-wider">
+                      <th className="py-2">{t.accounts.monthly}</th>
+                      <th className="py-2 text-right">{t.accounts.income}</th>
+                      <th className="py-2 text-right">{t.accounts.expense}</th>
+                      <th className="py-2 text-right">{t.accounts.net}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summary.monthly.map((row) => (
+                      <tr key={row.month} className="border-b border-foreground/20">
+                        <td className="py-1.5">{row.month}</td>
+                        <td className="py-1.5 text-right tabular-nums">{money(row.income)}</td>
+                        <td className="py-1.5 text-right tabular-nums">{money(row.expense)}</td>
+                        <td className="py-1.5 text-right tabular-nums font-medium">{money(row.net)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                </div>
+              ) : null}
+              <div className="mt-10 grid grid-cols-2 gap-4 text-center text-xs sm:mt-16 sm:gap-12">
+                <div>
+                  <div className="mx-auto mb-2 h-10 max-w-[11rem] border-b border-foreground" />
+                  <p className="font-semibold">{t.staff.accountant}</p>
+                </div>
+                <div>
+                  <div className="mx-auto mb-2 h-10 max-w-[11rem] border-b border-foreground" />
+                  <p className="font-semibold">{t.staff.admin}</p>
+                </div>
               </div>
             </div>
-            <dl className="mt-6 space-y-2 text-sm">
-              <div className="flex justify-between border-b border-border py-2">
-                <dt>{t.accounts.fromFees}</dt>
-                <dd className="tabular-nums">৳ {money(summary.income.fees)}</dd>
-              </div>
-              <div className="flex justify-between border-b border-border py-2">
-                <dt>{t.accounts.fromDonations}</dt>
-                <dd className="tabular-nums">৳ {money(summary.income.donations)}</dd>
-              </div>
-              <div className="flex justify-between border-b border-border py-2">
-                <dt>{t.accounts.operational}</dt>
-                <dd className="tabular-nums">৳ {money(summary.expense.operational)}</dd>
-              </div>
-              <div className="flex justify-between border-b border-border py-2">
-                <dt>{t.accounts.payroll}</dt>
-                <dd className="tabular-nums">৳ {money(summary.expense.payroll)}</dd>
-              </div>
-            </dl>
-          </div>
+          </article>
         </div>
       ) : null}
     </div>

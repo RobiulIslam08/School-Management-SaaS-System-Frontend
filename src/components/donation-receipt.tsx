@@ -43,7 +43,7 @@ export function DonationReceipt({
   return (
     <article className="donation-receipt-sheet mx-auto max-w-[210mm] overflow-hidden bg-white shadow-[0_8px_30px_rgba(28,25,23,0.08)] print:max-w-none print:shadow-none">
       <div className="border border-foreground/70">
-        <header className="flex items-start gap-4 border-b border-foreground/30 px-8 py-6">
+        <header className="flex flex-col gap-3 border-b border-foreground/30 px-4 py-5 sm:flex-row sm:items-start sm:gap-4 sm:px-8 sm:py-6">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-foreground">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -53,16 +53,16 @@ export function DonationReceipt({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold uppercase tracking-wide">{schoolName}</h1>
+            <h1 className="break-words text-lg font-bold uppercase leading-tight tracking-wide sm:text-xl">{schoolName}</h1>
             {settings?.address ? <p className="mt-1 text-sm text-muted-foreground">{settings.address}</p> : null}
           </div>
-          <div className="text-right">
+          <div className="text-left sm:text-right">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t.donations.receipt}</p>
             <p className="mt-1 text-lg font-bold">{t.donations.receiptTitle}</p>
             <p className="mt-2 font-mono text-xs">{item.receiptNo || item._id.slice(-8).toUpperCase()}</p>
           </div>
         </header>
-        <div className="grid gap-4 border-b border-foreground/20 px-8 py-5 text-sm sm:grid-cols-2">
+        <div className="grid gap-4 border-b border-foreground/20 px-4 sm:px-8 py-5 text-sm sm:grid-cols-2">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t.donations.donor}</p>
             <p className="mt-1 text-base font-semibold">{item.donorName}</p>
@@ -87,12 +87,12 @@ export function DonationReceipt({
             ) : null}
           </div>
         </div>
-        <div className="px-8 py-8 text-center">
+        <div className="px-4 sm:px-8 py-8 text-center">
           <p className="text-sm text-muted-foreground">{t.donations.thanks}</p>
           <p className="mt-3 text-3xl font-bold tabular-nums">BDT {money(item.amount, locale)}</p>
           {item.note ? <p className="mt-4 text-sm text-muted-foreground">{item.note}</p> : null}
         </div>
-        <div className="grid grid-cols-2 gap-10 px-8 pb-8 pt-4 text-center text-xs">
+        <div className="grid grid-cols-2 gap-4 sm:gap-10 px-4 sm:px-8 pb-8 pt-4 text-center text-xs">
           <div>
             <div className="mx-auto mb-2 h-12 max-w-[11rem] border-b border-foreground" />
             <p className="font-medium">{t.staff.accountant}</p>
@@ -102,7 +102,7 @@ export function DonationReceipt({
             <p className="font-medium">{t.marksheets.head}</p>
           </div>
         </div>
-        <footer className="border-t border-foreground/20 bg-muted/30 px-8 py-3 text-center text-[11px] text-muted-foreground">
+        <footer className="border-t border-foreground/20 bg-muted/30 px-4 sm:px-8 py-3 text-center text-[11px] text-muted-foreground">
           {t.donations.receiptFooter}
         </footer>
       </div>

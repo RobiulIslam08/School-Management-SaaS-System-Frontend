@@ -111,6 +111,10 @@ export default function CertificatesPage() {
   const [activeBodyField, setActiveBodyField] = useState<"bodyBn" | "bodyEn">("bodyBn");
   const bodyBnRef = useRef<HTMLTextAreaElement | null>(null);
   const bodyEnRef = useRef<HTMLTextAreaElement | null>(null);
+  const previewAnchor = useRef<HTMLDivElement | null>(null);
+  const templateAnchor = useRef<HTMLFormElement | null>(null);
+  const scrollPreview = useRef(false);
+  const scrollTemplate = useRef(false);
 
   const form = useForm<IssueForm>({
     resolver: zodResolver(issueSchema),
@@ -259,11 +263,44 @@ export default function CertificatesPage() {
     const result = await issue({ ...values, language: locale });
     if (!toastApiResult(result, t.certificates.issue, t.common.loadError)) return;
     const created = result.data?.data as IssuedCertificate | undefined;
-    if (created?._id) setPreviewId(created._id);
+    if (created?._id) {
+      scrollPreview.current = true;
+      setPreviewId(created._id);
+    }
     form.reset(EMPTY_ISSUE);
     setStudentQ("");
     setTab("register");
   }
+
+  function showPreview(id: string) {
+    scrollPreview.current = true;
+    setPreviewId(id);
+    if (id === previewId) {
+      previewAnchor.current?.scrollIntoView({ behavior: "auto", block: "start" });
+      scrollPreview.current = false;
+    }
+  }
+
+  function showTemplate(item: Template) {
+    scrollTemplate.current = true;
+    setEdit(item);
+    if (edit?._id === item._id) {
+      templateAnchor.current?.scrollIntoView({ behavior: "auto", block: "start" });
+      scrollTemplate.current = false;
+    }
+  }
+
+  useEffect(() => {
+    if (!scrollPreview.current || tab !== "register" || !preview) return;
+    previewAnchor.current?.scrollIntoView({ behavior: "auto", block: "start" });
+    scrollPreview.current = false;
+  }, [tab, preview]);
+
+  useEffect(() => {
+    if (!scrollTemplate.current || tab !== "templates" || !edit) return;
+    templateAnchor.current?.scrollIntoView({ behavior: "auto", block: "start" });
+    scrollTemplate.current = false;
+  }, [tab, edit]);
 
   function insertPlaceholder(token: string) {
     if (!edit) return;
@@ -532,7 +569,7 @@ export default function CertificatesPage() {
                     <Button
                       type="button"
                       variant={previewId === row._id ? "primary" : "secondary"}
-                      onClick={() => setPreviewId(row._id)}
+                      onClick={() => showPreview(row._id)}
                     >
                       {t.common.view}
                     </Button>
@@ -549,7 +586,7 @@ export default function CertificatesPage() {
                     <Button
                       type="button"
                       variant={previewId === row._id ? "primary" : "secondary"}
-                      onClick={() => setPreviewId(row._id)}
+                      onClick={() => showPreview(row._id)}
                     >
                       {t.common.view}
                     </Button>
@@ -565,7 +602,7 @@ export default function CertificatesPage() {
           </div>
 
           {preview ? (
-            <div className="certificate-print-target">
+            <div ref={previewAnchor} className="certificate-print-target scroll-mt-20">
               <div className="no-print mb-3 flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-medium">{t.certificates.printPreview}</p>
                 <Button variant="secondary" onClick={() => window.print()}>
@@ -594,7 +631,7 @@ export default function CertificatesPage() {
                     "h-11 w-full rounded-xl border px-4 text-left text-sm transition",
                     edit?._id === item._id ? "border-primary bg-primary/5 font-medium" : "border-border bg-white hover:bg-muted"
                   )}
-                  onClick={() => setEdit(item)}
+                  onClick={() => showTemplate(item)}
                 >
                   {kindLabel[item.kind]}
                 </button>
@@ -602,7 +639,8 @@ export default function CertificatesPage() {
             </div>
             {edit ? (
               <form
-                className="space-y-3 rounded-xl border border-border bg-white p-4 shadow-sm"
+                ref={templateAnchor}
+                className="scroll-mt-20 space-y-3 rounded-xl border border-border bg-white p-4 shadow-sm"
                 onSubmit={async (e) => {
                   e.preventDefault();
                   if (savingTemplate) return;

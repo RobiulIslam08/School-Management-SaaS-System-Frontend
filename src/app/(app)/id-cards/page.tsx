@@ -100,7 +100,7 @@ export default function IdCardsPage() {
         ) : null}
       </div>
 
-      <div className={`mt-2 space-y-6 ${!printSet.length ? "hidden" : ""}`}>
+      <div className={`mt-2 space-y-6 overflow-x-auto ${!printSet.length ? "hidden" : ""}`}>
         {printSet.map((row) => (
           <IdCardDocument key={row._id} student={row} settings={settings} />
         ))}

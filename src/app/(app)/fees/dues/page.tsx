@@ -270,6 +270,25 @@ function DuesInner() {
       <DataTable
         rows={filtered}
         rowKey={(row) => row._id}
+        mobileCard={(row) => (
+          <div className="space-y-1">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-medium">{row.studentId?.name ?? "—"}</p>
+                <p className="font-mono text-xs text-muted-foreground">{row.studentId?.studentId ?? "—"}</p>
+              </div>
+              <StatusBadge
+                label={statusLabel(row.status)}
+                tone={row.status === "partial" ? "warning" : "danger"}
+              />
+            </div>
+            <p className="break-words text-sm">{row.title}</p>
+            <p className="text-sm">
+              <span className="text-muted-foreground">{t.fees.remaining}: </span>
+              <span className="font-semibold tabular-nums">{money(remaining(row))}</span>
+            </p>
+          </div>
+        )}
         columns={[
           {
             header: t.common.student,

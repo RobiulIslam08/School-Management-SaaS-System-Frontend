@@ -64,8 +64,8 @@ export function PayslipInvoice({
   return (
     <article className="payslip-sheet mx-auto max-w-[210mm] overflow-hidden bg-white text-foreground shadow-[0_8px_30px_rgba(28,25,23,0.08)] print:max-w-none print:shadow-none">
       <div className="border border-foreground/70">
-        <header className="border-b border-foreground/30 px-8 py-6">
-          <div className="flex items-start gap-4">
+        <header className="border-b border-foreground/30 px-4 sm:px-8 py-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-foreground bg-white">
               {logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -75,7 +75,7 @@ export function PayslipInvoice({
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl font-bold uppercase tracking-wide">{schoolName}</h1>
+              <h1 className="break-words text-lg font-bold uppercase leading-tight tracking-wide sm:text-xl">{schoolName}</h1>
               {settings?.address ? (
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{settings.address}</p>
               ) : null}
@@ -84,7 +84,7 @@ export function PayslipInvoice({
                 {settings?.academicYear ? ` · ${t.common.year}: ${settings.academicYear}` : null}
               </p>
             </div>
-            <div className="shrink-0 text-right">
+            <div className="text-left sm:shrink-0 sm:text-right">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 {t.payroll.invoice}
               </p>
@@ -94,7 +94,7 @@ export function PayslipInvoice({
           </div>
         </header>
 
-        <div className="grid gap-6 border-b border-foreground/20 px-8 py-5 sm:grid-cols-2">
+        <div className="grid gap-6 border-b border-foreground/20 px-4 sm:px-8 py-5 sm:grid-cols-2">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               {t.payroll.billTo}
@@ -128,7 +128,7 @@ export function PayslipInvoice({
           </div>
         </div>
 
-        <div className="px-8 py-5">
+        <div className="px-4 sm:px-8 py-5">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b-2 border-foreground/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -169,7 +169,7 @@ export function PayslipInvoice({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-10 px-8 pb-8 pt-10 text-center text-xs">
+        <div className="grid grid-cols-2 gap-4 sm:gap-10 px-4 sm:px-8 pb-8 pt-10 text-center text-xs">
           <div>
             <div className="mx-auto mb-2 h-12 max-w-[11rem] border-b border-foreground" />
             <p className="font-medium">{t.staff.accountant}</p>
@@ -180,7 +180,7 @@ export function PayslipInvoice({
           </div>
         </div>
 
-        <footer className="border-t border-foreground/20 bg-muted/30 px-8 py-3 text-center text-[11px] text-muted-foreground">
+        <footer className="border-t border-foreground/20 bg-muted/30 px-4 sm:px-8 py-3 text-center text-[11px] text-muted-foreground">
           {t.payroll.invoiceFooter}
         </footer>
       </div>

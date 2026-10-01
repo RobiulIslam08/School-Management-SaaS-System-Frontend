@@ -188,6 +188,28 @@ export const schoolApi = baseApi.injectEndpoints({
       query: ({ id, ...body }) => ({ url: `/fees/ledgers/${id}/payments`, method: "POST", body }),
       invalidatesTags: ["Fees", "Dashboard", "Accounts"],
     }),
+    recordFeePayments: build.mutation<
+      Envelope<{
+        receiptNo: string;
+        method: string;
+        refNo: string;
+        date: string;
+        academicYear: string;
+        student: { name: string; studentId: string; className: string };
+        lines: Array<{ ledgerId?: string; title?: string; amount: number }>;
+      }>,
+      {
+        studentId?: string;
+        method: string;
+        refNo?: string;
+        note?: string;
+        date?: string;
+        lines: Array<{ ledgerId?: string; title?: string; amount: number }>;
+      }
+    >({
+      query: (body) => ({ url: "/fees/payments", method: "POST", body }),
+      invalidatesTags: ["Fees", "Dashboard", "Accounts"],
+    }),
     getFeeSummary: build.query<
       Envelope<{
         due: number;
@@ -344,6 +366,7 @@ export const {
   useGetLedgersQuery,
   useCreateLedgerMutation,
   useAddPaymentMutation,
+  useRecordFeePaymentsMutation,
   useGetFeeSummaryQuery,
   useGetNoticesQuery,
   useGetNoticeQuery,

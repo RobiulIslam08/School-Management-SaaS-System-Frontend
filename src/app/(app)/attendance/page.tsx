@@ -145,8 +145,8 @@ export default function AttendancePage() {
           <span className="rounded-full bg-red-100 px-3 py-1 text-red-800">{t.common.absent} {counts.absent}</span>
           <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-800">{t.common.late} {counts.late}</span>
           <span className="rounded-full bg-muted px-3 py-1">{t.common.leave} {counts.leave}/{counts.total}</span>
-          <Button type="button" variant="secondary" className="h-9" onClick={() => setStatus(Object.fromEntries(students.map((s) => [s._id, "present"])))}>{t.attendance.markAllPresent}</Button>
-          <Button type="button" variant="secondary" className="h-9" onClick={() => setStatus(Object.fromEntries(students.map((s) => [s._id, "absent"])))}>{t.attendance.markAllAbsent}</Button>
+          <Button type="button" variant="secondary" onClick={() => setStatus(Object.fromEntries(students.map((s) => [s._id, "present"])))}>{t.attendance.markAllPresent}</Button>
+          <Button type="button" variant="secondary" onClick={() => setStatus(Object.fromEntries(students.map((s) => [s._id, "absent"])))}>{t.attendance.markAllAbsent}</Button>
         </div>
       ) : null}
       {!classId ? <EmptyState title={t.attendance.pickClass} /> : null}
@@ -159,7 +159,10 @@ export default function AttendancePage() {
           return (
             <div
               key={student._id}
-              className={cn("flex items-center justify-between gap-3 rounded-xl border bg-white px-4 py-3", index === focus && "ring-2 ring-primary")}
+              className={cn(
+                "flex flex-col gap-3 rounded-xl border bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between",
+                index === focus && "ring-2 ring-primary"
+              )}
             >
               <div className="flex min-w-0 items-center gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">

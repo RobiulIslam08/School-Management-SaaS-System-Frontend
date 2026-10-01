@@ -294,13 +294,13 @@ export default function AdmitPage() {
     <div>
       <PageHeader title={t.students.admitTitle} subtitle={t.students.admitHint} />
       {classesError ? <QueryError onRetry={refetchClasses} /> : null}
-      <div className="mb-6 flex gap-2 overflow-x-auto no-print">
+      <div className="mb-6 flex flex-wrap gap-2 no-print">
         {steps.map((label, index) => (
           <button
             key={label}
             type="button"
             className={cn(
-              "h-10 shrink-0 rounded-full px-4 text-sm font-medium",
+              "h-11 rounded-full px-4 text-sm font-medium",
               index === step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
             )}
             onClick={() => setStep(index)}
@@ -311,7 +311,7 @@ export default function AdmitPage() {
       </div>
 
       <div className="no-print mb-8 max-w-4xl">
-        <Card className="space-y-4">
+        <Card className="space-y-4 max-md:pb-24">
           {step === 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2 flex flex-wrap items-start gap-4">
@@ -506,7 +506,7 @@ export default function AdmitPage() {
             <AdmissionFormDocument settings={settings} data={formDocData()} />
           ) : null}
 
-          <div className="flex justify-between pt-2">
+          <div className="fixed inset-x-0 bottom-0 z-30 flex justify-between gap-3 border-t border-border bg-white/95 px-4 py-3 backdrop-blur md:static md:z-auto md:border-0 md:bg-transparent md:px-0 md:py-0 md:pt-2">
             <Button type="button" variant="secondary" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>
               {t.common.back}
             </Button>

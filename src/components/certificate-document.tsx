@@ -158,14 +158,10 @@ export function CertificateDocument({
               </div>
             </div>
 
-            <div className="mt-14 grid grid-cols-2 gap-10 text-center text-xs sm:gap-16">
-              <div>
-                <div className="mx-auto mb-2 h-10 max-w-[11rem] border-b border-foreground" />
-                <p className="font-medium">{t.certificates.office}</p>
-              </div>
-              <div>
-                <div className="mx-auto mb-2 h-10 max-w-[11rem] border-b border-foreground" />
-                <p className="font-medium">{t.marksheets.head}</p>
+            <div className="mt-14 flex justify-end text-center text-xs">
+              <div className="w-full max-w-[11rem]">
+                <div className="mb-2 h-10 border-b border-foreground" />
+                <p className="font-medium">{t.certificates.signatory}</p>
               </div>
             </div>
           </div>

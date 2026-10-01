@@ -57,7 +57,7 @@ export const financeApi = baseApi.injectEndpoints({
       query: (params) => `/accounts/summary${qs(params || undefined)}`,
       providesTags: ["Accounts"],
     }),
-    getStaffAttendance: build.query<Envelope<unknown[]>, { date?: string } | void>({
+    getStaffAttendance: build.query<Envelope<unknown[]>, { date?: string; from?: string; to?: string } | void>({
       query: (params) => `/staff-attendance${qs(params || undefined)}`,
       providesTags: ["StaffAttendance"],
     }),
