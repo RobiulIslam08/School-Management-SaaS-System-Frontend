@@ -67,6 +67,10 @@ export function ReadyTab({
           {t.website.resultToggle}
         </label>
         <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={form.receiptLookupEnabled !== false} onChange={(event) => setForm({ ...form, receiptLookupEnabled: event.target.checked })} />
+          {t.website.receiptToggle}
+        </label>
+        <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={form.meritListEnabled === true} onChange={(event) => setForm({ ...form, meritListEnabled: event.target.checked })} />
           {t.website.meritToggle}
         </label>

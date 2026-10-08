@@ -89,6 +89,7 @@ const CONFIG_KEYS = [
   "admitBodyEn",
   "desks",
   "resultLookupEnabled",
+  "receiptLookupEnabled",
   "meritListEnabled",
   "seoDescriptionBn",
   "seoDescriptionEn",
