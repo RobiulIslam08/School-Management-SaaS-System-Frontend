@@ -57,6 +57,16 @@ export default function StaffAttendancePage() {
   const [focus, setFocus] = useState(0);
   const [status, setStatus] = useState<Record<string, string>>({});
   const [baseline, setBaseline] = useState<Record<string, string>>({});
+  const scopeRef = useRef("");
+  const touchedRef = useRef<Record<string, string>>({});
+
+  function remember(next: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) {
+    setStatus((prev) => {
+      const value = typeof next === "function" ? next(prev) : next;
+      touchedRef.current = { ...touchedRef.current, ...value };
+      return { ...prev, ...value };
+    });
+  }
   const [report, setReport] = useState<null | { kind: "month" | "year"; from: string; to: string }>(null);
   const reportAnchor = useRef<HTMLDivElement>(null);
 
@@ -86,9 +96,15 @@ export default function StaffAttendancePage() {
       const id = typeof row.teacherId === "string" ? row.teacherId : row.teacherId?._id;
       if (id && row.status) next[id] = row.status;
     }
-    setStatus(next);
     setBaseline(next);
-    setFocus(0);
+    if (scopeRef.current !== date) {
+      scopeRef.current = date;
+      touchedRef.current = {};
+      setStatus(next);
+      setFocus(0);
+      return;
+    }
+    setStatus(() => ({ ...next, ...touchedRef.current }));
   }, [existing, date]);
 
   const dirty = useMemo(() => {
@@ -144,7 +160,7 @@ export default function StaffAttendancePage() {
       const map: Record<string, string> = { p: "present", a: "absent", l: "late", e: "leave" };
       const next = map[event.key.toLowerCase()];
       if (next && visible[focus]) {
-        setStatus((prev) => ({ ...prev, [visible[focus]._id]: next }));
+        remember((prev) => ({ ...prev, [visible[focus]._id]: next }));
       }
     };
     window.addEventListener("keydown", onKey);
@@ -170,6 +186,7 @@ export default function StaffAttendancePage() {
     }));
     const result = await save({ date, entries });
     if (toastApiResult(result, t.staffAttendance.saved, t.common.loadError)) {
+      touchedRef.current = {};
       const next = Object.fromEntries(entries.map((e) => [e.teacherId, e.status]));
       setBaseline(next);
     }
@@ -250,7 +267,7 @@ export default function StaffAttendancePage() {
             onClick={() => {
               const next: Record<string, string> = {};
               for (const item of staff) next[item._id] = "present";
-              setStatus(next);
+              remember(next);
             }}
           >
             {t.staffAttendance.markAllPresent}
@@ -261,7 +278,7 @@ export default function StaffAttendancePage() {
             onClick={() => {
               const next: Record<string, string> = {};
               for (const item of staff) next[item._id] = "absent";
-              setStatus(next);
+              remember(next);
             }}
           >
             {t.staffAttendance.markAllAbsent}
@@ -348,7 +365,7 @@ export default function StaffAttendancePage() {
                       value === "leave" &&
                         (current === value ? "bg-stone-700 text-white" : "bg-muted text-muted-foreground")
                     )}
-                    onClick={() => setStatus((prev) => ({ ...prev, [item._id]: value }))}
+                    onClick={() => remember((prev) => ({ ...prev, [item._id]: value }))}
                   >
                     {statusLabel(value)}
                   </button>

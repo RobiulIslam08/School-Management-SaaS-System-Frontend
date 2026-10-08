@@ -5,13 +5,14 @@ import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { toastApiResult } from "@/lib/toast-api";
+import { AdmissionFormDocument, type AdmissionAddress } from "@/components/admission-form-document";
 import { Sheet } from "@/components/dialog";
 import { PageHeader } from "@/components/page-header";
 import { QueryError, TableSkeleton } from "@/components/query-state";
 import { StatusBadge } from "@/components/status-badge";
 import { Button, Card, Field, Input, Select, Textarea } from "@/components/ui";
 import { useUpdateStudentMutation } from "@/lib/api/peopleApi";
-import { useGetClassesQuery, useGetStudentQuery } from "@/lib/api/schoolApi";
+import { useGetClassesQuery, useGetStudentQuery, useMeQuery } from "@/lib/api/schoolApi";
 import { formatStudentAddress } from "@/lib/address";
 import { classFamilies, classFamilyLabel, resolveClassMember, type ClassRow } from "@/lib/class-families";
 import { sectionNames } from "@/lib/sections";
@@ -27,6 +28,7 @@ type Student = {
   email?: string;
   gender?: string;
   photoUrl?: string;
+  dob?: string;
   birthRegNo?: string;
   bloodGroup?: string;
   religion?: string;
@@ -38,7 +40,8 @@ type Student = {
   healthNotes?: string;
   talentTags?: string[];
   classId?: { _id?: string; name?: string; sections?: unknown; group?: string };
-  address?: { division?: string; district?: string; upazila?: string; area?: string; road?: string; holding?: string; block?: string };
+  address?: AdmissionAddress;
+  permanentAddress?: AdmissionAddress;
   guardian?: {
     fatherName?: string;
     fatherNameBn?: string;
@@ -47,6 +50,8 @@ type Student = {
     guardianName?: string;
     guardianNameBn?: string;
     phone?: string;
+    fatherPhone?: string;
+    motherPhone?: string;
     nid?: string;
     occupation?: string;
     relation?: string;
@@ -64,6 +69,7 @@ function StudentProfileInner() {
   const { t } = useI18n();
   const params = useParams<{ id: string }>();
   const search = useSearchParams();
+  const { data: session } = useMeQuery();
   const { data, isLoading, isError, refetch } = useGetStudentQuery(params.id);
   const { data: classes } = useGetClassesQuery();
   const [updateStudent, { isLoading: saving }] = useUpdateStudentMutation();
@@ -143,6 +149,9 @@ function StudentProfileInner() {
   if (isError || !student) return <QueryError onRetry={refetch} />;
 
   const displayClass = student.classId?.name ? classFamilyLabel(student.classId.name) : "";
+  const courseName = [displayClass, student.group && student.group !== "None" ? student.group : "", student.section].filter(Boolean).join(" · ");
+  const parsedDob = student.dob ? new Date(student.dob) : null;
+  const dob = parsedDob && !Number.isNaN(parsedDob.getTime()) ? parsedDob.toLocaleDateString() : "";
 
   return (
     <div>
@@ -152,6 +161,9 @@ function StudentProfileInner() {
         actions={
           <>
             <StatusBadge label={statusLabel(t, student.status)} tone={studentStatusTone(student.status)} />
+            <Button type="button" variant="secondary" onClick={() => window.print()}>
+              {t.students.downloadPdf}
+            </Button>
             <Button type="button" variant="secondary" onClick={() => setOpen(true)}>
               {t.students.editProfile}
             </Button>
@@ -221,6 +233,33 @@ function StudentProfileInner() {
             </Link>
           </div>
         </Card>
+      </div>
+      <div className="admission-print-root mt-8">
+        <h2 className="no-print mb-3 text-sm font-semibold">{t.students.admissionSlip}</h2>
+        <AdmissionFormDocument
+          settings={session?.data.settings}
+          data={{
+            studentId: student.studentId,
+            name: student.name,
+            nameBn: student.nameBn,
+            phone: student.phone,
+            email: student.email,
+            dob,
+            birthRegNo: student.birthRegNo,
+            religion: student.religion,
+            bloodGroup: student.bloodGroup,
+            photoUrl: student.photoUrl,
+            courseName,
+            fatherName: student.guardian?.fatherName,
+            fatherNameBn: student.guardian?.fatherNameBn,
+            fatherPhone: student.guardian?.fatherPhone || student.guardian?.phone,
+            motherName: student.guardian?.motherName,
+            motherNameBn: student.guardian?.motherNameBn,
+            motherPhone: student.guardian?.motherPhone,
+            address: student.address,
+            permanentAddress: student.permanentAddress,
+          }}
+        />
       </div>
       <Sheet open={open} title={t.students.editProfile} onClose={() => setOpen(false)}>
         <form

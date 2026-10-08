@@ -30,8 +30,9 @@ export interface NavItem {
     | "idCards"
     | "certificates"
     | "guardian"
-    | "teacherPortal"
-    | "settings";
+  | "teacherPortal"
+  | "settings"
+  | "website";
   feature?: string;
   /** Required permission (e.g. fees:view). Omit for all authenticated school users. */
   permission?: string;
@@ -40,7 +41,7 @@ export interface NavItem {
 }
 
 export interface NavGroup {
-  titleKey: "overview" | "academic" | "people" | "finance" | "communication" | "operations" | "portals" | "system";
+  titleKey: "overview" | "academic" | "people" | "finance" | "communication" | "operations" | "portals" | "system" | "website";
   items: NavItem[];
 }
 
@@ -125,6 +126,10 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/portal/guardian", labelKey: "guardian", roles: ["guardian"] },
       { href: "/portal/teacher", labelKey: "teacherPortal", roles: ["teacher", "school_admin"] },
     ],
+  },
+  {
+    titleKey: "website",
+    items: [{ href: "/website", labelKey: "website", permission: "website:view" }],
   },
   {
     titleKey: "system",

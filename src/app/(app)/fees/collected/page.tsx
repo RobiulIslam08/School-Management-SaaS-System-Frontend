@@ -11,7 +11,7 @@ import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state"
 import { StatCard } from "@/components/stat-card";
 import { Button, Field, Input, Select } from "@/components/ui";
 import { useGetFeeSummaryQuery, useGetLedgersQuery, useGetStudentsQuery, useMeQuery, useRecordFeePaymentsMutation } from "@/lib/api/schoolApi";
-import { FEE_HEADS, defaultFeePeriod, feeHeadName, feeParticular, feeTitleMatchesHead } from "@/lib/fee-heads";
+import { FEE_HEADS, defaultFeePeriod, feeHeadName, feeParticular, feeTitleMatchesHead, pickFeeLedger } from "@/lib/fee-heads";
 import { useI18n } from "@/lib/i18n";
 import { parseNumberOrZero } from "@/lib/number-input";
 import { cn } from "@/lib/utils";
@@ -185,15 +185,9 @@ export default function FeeCollectedPage() {
   const studentHits = ((studentSearch?.data ?? []) as Array<{ _id: string; name: string; studentId: string }>).slice(0, 40);
   const extraLedgers = heads.filter((row) => !FEE_HEADS.some((head) => feeTitleMatchesHead(row.title, head)));
 
-  function catalogBalance(head: string, printed: string, amount: number): number | null {
-    const candidates = heads.filter((row) => feeTitleMatchesHead(row.title, head));
-    if (!candidates.length) return null;
-    const fits = (row: LedgerRow) => amount > 0 && remaining(row) >= amount;
-    const exact = candidates.find((row) => row.title.trim() === printed && fits(row));
-    const bare = candidates.find((row) => row.title.trim() === head && fits(row));
-    const any = [...candidates].filter(fits).sort((a, b) => remaining(b) - remaining(a))[0];
-    if (exact || bare || any) return remaining((exact ?? bare ?? any)!);
-    return Math.max(...candidates.map((row) => remaining(row)));
+  function catalogBalance(printed: string, amount: number): number | null {
+    const chosen = pickFeeLedger(heads, printed, amount, remaining);
+    return chosen ? remaining(chosen.ledger) : null;
   }
 
   const catalogLines: Array<{ title: string; amount: number; over: boolean; balance: number | null; ledgerId?: string }> = FEE_HEADS.flatMap((head) => {
@@ -202,7 +196,7 @@ export default function FeeCollectedPage() {
     const amount = parseNumberOrZero(raw);
     if (amount <= 0) return [];
     const title = feeParticular(head, periods[head] ?? defaultFeePeriod());
-    const balance = catalogBalance(head, title, amount);
+    const balance = catalogBalance(title, amount);
     return [{ title, amount, over: balance != null && amount > balance, balance }];
   });
   const extraLines = extraLedgers.flatMap((row) => {
@@ -399,7 +393,7 @@ export default function FeeCollectedPage() {
                       const period = periods[head] ?? defaultFeePeriod();
                       const title = feeParticular(head, period);
                       const typed = parseNumberOrZero(amounts[head] ?? "");
-                      const balance = catalogBalance(head, title, typed);
+                      const balance = catalogBalance(title, typed);
                       const over = typed > 0 && balance != null && typed > balance;
                       const included = typed > 0 && !over;
                       return (

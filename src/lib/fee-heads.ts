@@ -45,3 +45,25 @@ export function feeTitleMatchesHead(title: string, head: string): boolean {
   const value = title.trim();
   return value === head || value.startsWith(`${head} (`) || value.startsWith(`${head}(`);
 }
+
+export type FeeLedgerPick<T> = { kind: "pay"; ledger: T } | { kind: "over"; ledger: T };
+
+/** Month-specific titles match that month or a bare head. They do not match another month. */
+export function pickFeeLedger<T extends { title: string }>(
+  open: T[],
+  printed: string,
+  amount: number,
+  remainingOf: (row: T) => number
+): FeeLedgerPick<T> | null {
+  const head = feeHeadName(printed);
+  const target = printed.trim();
+  const withBalance = open.filter((row) => remainingOf(row) > 0 && feeTitleMatchesHead(row.title, head));
+  const exact = withBalance.filter((row) => row.title.trim() === target);
+  const bare = target === head ? [] : withBalance.filter((row) => row.title.trim() === head);
+  const matches = exact.length ? exact : bare;
+  if (!matches.length) return null;
+  const fits = matches.filter((row) => remainingOf(row) >= amount);
+  if (fits.length) return { kind: "pay", ledger: fits[0] };
+  const blocked = [...matches].sort((a, b) => remainingOf(b) - remainingOf(a))[0];
+  return { kind: "over", ledger: blocked };
+}

@@ -1,18 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toastApiResult } from "@/lib/toast-api";
 import { ConfirmDialog, Sheet } from "@/components/dialog";
+import { RoutineGrid } from "@/components/routine-grid";
 import { WorkspaceTabs } from "@/components/workspace-tabs";
 import { Button, Field, Input, Select } from "@/components/ui";
 import { EmptyState } from "@/components/query-state";
 import { useGetClassWorkspaceQuery, useSaveClassSectionMutation, useDeleteClassSectionMutation } from "@/lib/api/classApi";
 import { useGetClassesQuery, useGetSubjectsQuery, useGetTeachersQuery, usePromoteStudentsMutation, useGetStudentsQuery } from "@/lib/api/schoolApi";
-import { useGetRoutinesQuery, useSaveRoutineMutation, useDeleteRoutineMutation } from "@/lib/api/routineApi";
 import { asSectionRows } from "@/lib/sections";
 import { useI18n } from "@/lib/i18n";
-
-const DAYS = [0, 1, 2, 3, 4, 5, 6];
 
 export function ClassWorkspace({
   classId,
@@ -32,24 +30,17 @@ export function ClassWorkspace({
   const [saveSection] = useSaveClassSectionMutation();
   const [deleteSection] = useDeleteClassSectionMutation();
   const [promote] = usePromoteStudentsMutation();
-  const [saveRoutine] = useSaveRoutineMutation();
-  const [deleteRoutine] = useDeleteRoutineMutation();
   const [tab, setTab] = useState("sections");
   const [sectionForm, setSectionForm] = useState({ name: "", capacity: "" as string | number, classTeacherId: "" });
   const [removeName, setRemoveName] = useState<string | null>(null);
   const [targetClassId, setTargetClassId] = useState("");
   const [targetSection, setTargetSection] = useState("A");
-  const [slot, setSlot] = useState({ section: "A", day: 0, period: 1, subjectId: "", teacherId: "" });
-  const { data: routines } = useGetRoutinesQuery({ classId, section: slot.section });
 
   const workspace = data?.data as { class?: { sections?: unknown }; counts?: { students?: number; subjects?: number } } | undefined;
   const sections = asSectionRows(workspace?.class?.sections as never);
   const subjectList = (subjects?.data ?? []) as Array<{ _id: string; name: string }>;
   const teacherList = (teachers?.data ?? []) as Array<{ _id: string; name: string }>;
   const studentList = (students?.data ?? []) as Array<{ _id: string }>;
-  const routineList = (routines?.data ?? []) as Array<{ _id: string; day: number; period: number; subjectId?: { name?: string } }>;
-  const dayLabel = useMemo(() => [t.common.date, "1", "2", "3", "4", "5", "6"], [t]);
-
   return (
     <Sheet open onClose={onClose} title={`${className} · ${t.classes.workspace}`}>
       <WorkspaceTabs
@@ -124,54 +115,7 @@ export function ClassWorkspace({
         </div>
       ) : null}
 
-      {tab === "routine" ? (
-        <div className="space-y-4">
-          <form
-            className="grid gap-3 sm:grid-cols-5"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const result = await saveRoutine({ classId, ...slot, subjectId: slot.subjectId || undefined, teacherId: slot.teacherId || undefined });
-              toastApiResult(result, t.classes.routine, t.common.loadError);
-            }}
-          >
-            <Field label={t.common.section}>
-              <Select value={slot.section} onChange={(e) => setSlot({ ...slot, section: e.target.value })}>
-                {sections.map((row) => (
-                  <option key={row.name} value={row.name}>{row.name}</option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Day">
-              <Select value={String(slot.day)} onChange={(e) => setSlot({ ...slot, day: Number(e.target.value) })}>
-                {DAYS.map((day) => (
-                  <option key={day} value={day}>{dayLabel[day] ?? day}</option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="P">
-              <Input type="number" min={1} value={slot.period} onChange={(e) => setSlot({ ...slot, period: Number(e.target.value) })} />
-            </Field>
-            <Field label={t.nav.subjects}>
-              <Select value={slot.subjectId} onChange={(e) => setSlot({ ...slot, subjectId: e.target.value })}>
-                <option value="">{t.nav.subjects}</option>
-                {subjectList.map((item) => (
-                  <option key={item._id} value={item._id}>{item.name}</option>
-                ))}
-              </Select>
-            </Field>
-            <Button type="submit">{t.common.save}</Button>
-          </form>
-          {!routineList.length ? <EmptyState title={t.classes.routine} /> : null}
-          {routineList.map((row) => (
-            <div key={row._id} className="flex items-center justify-between rounded-xl border px-4 py-3 text-sm">
-              <span>D{row.day} P{row.period} · {row.subjectId?.name ?? "—"}</span>
-              <Button type="button" variant="ghost" onClick={async () => toastApiResult(await deleteRoutine(row._id), t.common.delete)}>
-                {t.common.delete}
-              </Button>
-            </div>
-          ))}
-        </div>
-      ) : null}
+      {tab === "routine" ? <RoutineGrid classId={classId} sections={sections.map((row) => row.name)} /> : null}
 
       {tab === "promote" ? (
         <form

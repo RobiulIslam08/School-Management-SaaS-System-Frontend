@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { GraduationCap, UserPlus, Users } from "lucide-react";
 import { toastApiResult } from "@/lib/toast-api";
 import { DataTable } from "@/components/data-table";
@@ -12,8 +12,9 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
-import { Button, Field, Select } from "@/components/ui";
+import { Button, Field, Input, Select } from "@/components/ui";
 import { useGetClassesQuery, useGetStudentsQuery, usePromoteStudentsMutation } from "@/lib/api/schoolApi";
+import { useUpdateStudentMutation } from "@/lib/api/peopleApi";
 import { sectionNames } from "@/lib/sections";
 import { studentStatusTone } from "@/lib/status";
 import { useI18n } from "@/lib/i18n";
@@ -44,26 +45,43 @@ function StudentsInner() {
   const classId = params.get("classId") ?? "";
   const section = params.get("section") ?? "";
   const status = params.get("status") ?? "";
+  const q = params.get("q") ?? "";
+  const [idText, setIdText] = useState(q);
   const { data, isLoading, isError, refetch } = useGetStudentsQuery({
-    q: params.get("q") ?? undefined,
+    q: q || undefined,
     classId: classId || undefined,
     section: section || undefined,
     status: status || undefined,
   });
 
-  function setFilters(next: { classId?: string; section?: string; status?: string }) {
+  function setFilters(next: { classId?: string; section?: string; status?: string; q?: string }) {
     const search = new URLSearchParams();
     const nextClass = next.classId ?? classId;
     const nextSection = next.section ?? section;
     const nextStatus = next.status ?? status;
+    const nextQ = (next.q ?? q).trim();
     if (nextClass) search.set("classId", nextClass);
     if (nextClass && nextSection) search.set("section", nextSection);
     if (nextStatus) search.set("status", nextStatus);
+    if (nextQ) search.set("q", nextQ);
     const qs = search.toString();
     router.replace(qs ? `/students?${qs}` : "/students");
   }
+
+  useEffect(() => {
+    setIdText(q);
+  }, [q]);
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      if (idText.trim() === q) return;
+      setFilters({ q: idText });
+    }, 300);
+    return () => window.clearTimeout(handle);
+  }, [idText, q, classId, section, status]);
   const { data: classes } = useGetClassesQuery();
   const [promote, { isLoading: promoting }] = usePromoteStudentsMutation();
+  const [updateStudent] = useUpdateStudentMutation();
   const [selected, setSelected] = useState<string[]>([]);
   const [promoteOpen, setPromoteOpen] = useState(false);
   const [targetClassId, setTargetClassId] = useState("");
@@ -110,6 +128,9 @@ function StudentsInner() {
         <StatCard href="/students/admit" label={t.common.pending} value={counts.pending} icon={<UserPlus size={18} />} tone="warning" />
       </div>
       <FilterBar>
+        <Field label={t.students.id}>
+          <Input value={idText} onChange={(e) => setIdText(e.target.value)} placeholder={t.students.id} />
+        </Field>
         <Field label={t.common.class}>
           <Select
             value={classId}
@@ -211,6 +232,16 @@ function StudentsInner() {
           },
         ]}
         actions={(row) => [
+          ...(row.status === "pending"
+            ? [{
+                label: t.students.approve,
+                onClick: () => {
+                  void updateStudent({ id: row._id, status: "active" }).then((result) => {
+                    toastApiResult(result, t.students.approve, t.common.loadError);
+                  });
+                },
+              }]
+            : []),
           { label: t.common.view, onClick: () => router.push(`/students/${row._id}`) },
           { label: t.common.edit, onClick: () => router.push(`/students/${row._id}?edit=1`) },
         ]}
@@ -235,7 +266,10 @@ function StudentsInner() {
                 <StatusBadge label={statusLabel(t, row.status)} tone={studentStatusTone(row.status)} />
               </div>
               <p className="text-sm text-muted-foreground">
-                {row.studentId} · {row.classId?.name ?? "—"} {row.section ?? ""}
+                {t.students.id}: {row.studentId || "—"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {row.classId?.name ?? "—"} {row.section ?? ""}
               </p>
               {row.phone ? <p className="text-xs text-muted-foreground">{row.phone}</p> : null}
             </div>

@@ -330,23 +330,23 @@ export default function AdmitPage() {
                   <p className="mt-1 text-xs text-muted-foreground">{t.students.photoHint}</p>
                 </Field>
               </div>
-              <Field label={t.students.studentName}>
+              <Field label={t.students.nameEn}>
                 <Input value={form.name} onChange={(e) => set("name", e.target.value)} required />
               </Field>
               <Field label={t.students.nameBn}>
                 <Input value={form.nameBn} onChange={(e) => set("nameBn", e.target.value)} />
               </Field>
               <Field label={t.common.phone}>
-                <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} />
+                <Input inputMode="numeric" autoComplete="tel" placeholder="01XXXXXXXXX" value={form.phone} onChange={(e) => set("phone", e.target.value.replace(/\D/g, "").slice(0, 14))} />
               </Field>
               <Field label={t.common.email}>
                 <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
               </Field>
               <Field label={t.students.dob}>
-                <Input type="date" value={form.dob} onChange={(e) => set("dob", e.target.value)} />
+                <Input type="date" min="1990-01-01" max={`${new Date().getFullYear()}-12-31`} value={form.dob} onChange={(e) => set("dob", e.target.value)} />
               </Field>
               <Field label={t.students.birthRegNo}>
-                <Input value={form.birthRegNo} onChange={(e) => set("birthRegNo", e.target.value)} required />
+                <Input inputMode="numeric" autoComplete="off" value={form.birthRegNo} onChange={(e) => set("birthRegNo", e.target.value.replace(/\D/g, "").slice(0, 17))} required />
               </Field>
               <Field label={t.common.religion}>
                 <Input value={form.religion} onChange={(e) => set("religion", e.target.value)} />
@@ -481,23 +481,23 @@ export default function AdmitPage() {
 
           {step === 2 ? (
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label={t.students.fatherNameLabel}>
+              <Field label={t.students.fatherEn}>
                 <Input value={form.guardian.fatherName} onChange={(e) => set("guardian", { ...form.guardian, fatherName: e.target.value })} />
               </Field>
               <Field label={t.students.fatherBn}>
                 <Input value={form.guardian.fatherNameBn} onChange={(e) => set("guardian", { ...form.guardian, fatherNameBn: e.target.value })} />
               </Field>
               <Field label={t.students.fatherMobile}>
-                <Input value={form.guardian.fatherPhone} onChange={(e) => set("guardian", { ...form.guardian, fatherPhone: e.target.value })} />
+                <Input inputMode="numeric" autoComplete="tel" placeholder="01XXXXXXXXX" value={form.guardian.fatherPhone} onChange={(e) => set("guardian", { ...form.guardian, fatherPhone: e.target.value.replace(/\D/g, "").slice(0, 14) })} />
               </Field>
-              <Field label={t.students.motherNameLabel}>
+              <Field label={t.students.motherEn}>
                 <Input value={form.guardian.motherName} onChange={(e) => set("guardian", { ...form.guardian, motherName: e.target.value })} />
               </Field>
               <Field label={t.students.motherBn}>
                 <Input value={form.guardian.motherNameBn} onChange={(e) => set("guardian", { ...form.guardian, motherNameBn: e.target.value })} />
               </Field>
               <Field label={t.students.motherMobile}>
-                <Input value={form.guardian.motherPhone} onChange={(e) => set("guardian", { ...form.guardian, motherPhone: e.target.value })} />
+                <Input inputMode="numeric" autoComplete="tel" placeholder="01XXXXXXXXX" value={form.guardian.motherPhone} onChange={(e) => set("guardian", { ...form.guardian, motherPhone: e.target.value.replace(/\D/g, "").slice(0, 14) })} />
               </Field>
             </div>
           ) : null}

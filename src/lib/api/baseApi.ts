@@ -72,6 +72,7 @@ export const baseApi = createApi({
     "Dashboard",
     "Certificates",
     "Routines",
+    "Website",
   ],
   baseQuery: baseQueryWithReauth,
   endpoints: () => ({}),

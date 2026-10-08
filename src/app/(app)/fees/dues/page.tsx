@@ -17,6 +17,7 @@ import {
   useGetStudentsQuery,
   useMeQuery,
 } from "@/lib/api/schoolApi";
+import { FEE_HEADS, defaultFeePeriod, feeParticular } from "@/lib/fee-heads";
 import { useI18n } from "@/lib/i18n";
 import { parseNumberOrZero } from "@/lib/number-input";
 import { cn } from "@/lib/utils";
@@ -62,7 +63,8 @@ function DuesInner() {
 
   const [form, setForm] = useState({
     studentId: presetStudent,
-    title: "Tuition",
+    head: FEE_HEADS[0] as string,
+    period: defaultFeePeriod(),
     dueAmount: "" as string | number,
     academicYear,
   });
@@ -148,15 +150,18 @@ function DuesInner() {
           e.preventDefault();
           if (!form.studentId) return;
           const dueAmount = parseNumberOrZero(form.dueAmount);
-          if (dueAmount <= 0) return;
+          if (dueAmount <= 0 || !form.head.trim()) return;
           const result = await createLedger({
-            ...form,
+            studentId: form.studentId,
+            academicYear: form.academicYear,
+            title: feeParticular(form.head, form.period),
             dueAmount,
           });
           if (toastApiResult(result, t.fees.addDue, t.common.loadError)) {
             setForm({
               studentId: presetStudent,
-              title: "Tuition",
+              head: FEE_HEADS[0],
+              period: defaultFeePeriod(),
               dueAmount: "",
               academicYear,
             });
@@ -164,7 +169,7 @@ function DuesInner() {
           }
         }}
       >
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           <Field label={t.common.student}>
             <Input
               value={studentSearch}
@@ -213,7 +218,21 @@ function DuesInner() {
             </ul>
           </Field>
           <Field label={t.fees.titleField}>
-            <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+            <Select value={form.head} onChange={(e) => setForm({ ...form, head: e.target.value })} required>
+              {FEE_HEADS.map((head) => (
+                <option key={head} value={head}>
+                  {head}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label={t.fees.period}>
+            <Input
+              value={form.period}
+              onChange={(e) => setForm({ ...form, period: e.target.value })}
+              placeholder={defaultFeePeriod()}
+              aria-label={t.fees.period}
+            />
           </Field>
           <Field label={t.fees.due}>
             <Input

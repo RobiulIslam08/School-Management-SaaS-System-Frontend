@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toastApiResult } from "@/lib/toast-api";
 import { PageHeader } from "@/components/page-header";
 import { QueryError, TableSkeleton, EmptyState } from "@/components/query-state";
@@ -8,7 +8,7 @@ import { Button, Field, Input, Select } from "@/components/ui";
 import { useGetAttendanceQuery, useGetClassesQuery, useGetRosterQuery, useSaveAttendanceMutation } from "@/lib/api/schoolApi";
 import { useGetAttendanceDatesQuery } from "@/lib/api/workspaceApi";
 import { sectionNames } from "@/lib/sections";
-import { cn } from "@/lib/utils";
+import { cn, toLocalYmd } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 
 const STATUSES = ["present", "absent", "late", "leave"] as const;
@@ -18,7 +18,7 @@ export default function AttendancePage() {
   const { data: classes } = useGetClassesQuery();
   const [classId, setClassId] = useState("");
   const [section, setSection] = useState("A");
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => toLocalYmd());
   const [q, setQ] = useState("");
   const [focus, setFocus] = useState(0);
   const { data, isLoading, isError, refetch } = useGetRosterQuery({ classId, section }, { skip: !classId });
@@ -27,6 +27,17 @@ export default function AttendancePage() {
   const [save, { isLoading: saving }] = useSaveAttendanceMutation();
   const students = (data?.data ?? []) as Array<{ _id: string; name: string; studentId: string; rollNo?: string; photoUrl?: string }>;
   const [status, setStatus] = useState<Record<string, string>>({});
+  const scopeRef = useRef("");
+  const touchedRef = useRef<Record<string, string>>({});
+  const scope = `${classId}|${section}|${date}`;
+
+  function remember(next: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) {
+    setStatus((prev) => {
+      const value = typeof next === "function" ? next(prev) : next;
+      touchedRef.current = { ...touchedRef.current, ...value };
+      return { ...prev, ...value };
+    });
+  }
   const classList = (classes?.data ?? []) as Array<{ _id: string; name: string; sections?: unknown }>;
   const sections = useMemo(() => sectionNames(classList.find((item) => item._id === classId)?.sections as never), [classList, classId]);
   const recorded = new Set((dates?.data ?? []) as string[]);
@@ -37,8 +48,14 @@ export default function AttendancePage() {
       const id = typeof row.studentId === "string" ? row.studentId : row.studentId?._id;
       if (id && row.status) next[id] = row.status;
     }
-    setStatus(next);
-  }, [existing, date, classId, section]);
+    if (scopeRef.current !== scope) {
+      scopeRef.current = scope;
+      touchedRef.current = {};
+      setStatus(next);
+      return;
+    }
+    setStatus(() => ({ ...next, ...touchedRef.current }));
+  }, [existing, scope]);
 
   const visible = students.filter((item) => !q || `${item.name} ${item.studentId} ${item.rollNo ?? ""}`.toLowerCase().includes(q.toLowerCase()));
   const counts = useMemo(() => {
@@ -66,7 +83,7 @@ export default function AttendancePage() {
       const map: Record<string, string> = { p: "present", a: "absent", l: "late" };
       const next = map[event.key.toLowerCase()];
       if (next && visible[focus]) {
-        setStatus((prev) => ({ ...prev, [visible[focus]._id]: next }));
+        remember((prev) => ({ ...prev, [visible[focus]._id]: next }));
       }
     };
     window.addEventListener("keydown", onKey);
@@ -110,7 +127,9 @@ export default function AttendancePage() {
           onClick={async () => {
             const entries = students.map((student) => ({ studentId: student._id, status: status[student._id] ?? "present" }));
             const result = await save({ classId, section, date, entries });
-            toastApiResult(result, t.attendance.saved, t.common.loadError);
+            if (toastApiResult(result, t.attendance.saved, t.common.loadError)) {
+              touchedRef.current = {};
+            }
           }}
         >
           {t.common.save}
@@ -121,7 +140,7 @@ export default function AttendancePage() {
           {Array.from({ length: 7 }, (_, i) => {
             const d = new Date();
             d.setDate(d.getDate() - (6 - i));
-            const iso = d.toISOString().slice(0, 10);
+            const iso = toLocalYmd(d);
             return (
               <button
                 key={iso}
@@ -145,8 +164,8 @@ export default function AttendancePage() {
           <span className="rounded-full bg-red-100 px-3 py-1 text-red-800">{t.common.absent} {counts.absent}</span>
           <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-800">{t.common.late} {counts.late}</span>
           <span className="rounded-full bg-muted px-3 py-1">{t.common.leave} {counts.leave}/{counts.total}</span>
-          <Button type="button" variant="secondary" onClick={() => setStatus(Object.fromEntries(students.map((s) => [s._id, "present"])))}>{t.attendance.markAllPresent}</Button>
-          <Button type="button" variant="secondary" onClick={() => setStatus(Object.fromEntries(students.map((s) => [s._id, "absent"])))}>{t.attendance.markAllAbsent}</Button>
+          <Button type="button" variant="secondary" onClick={() => remember(Object.fromEntries(students.map((s) => [s._id, "present"])))}>{t.attendance.markAllPresent}</Button>
+          <Button type="button" variant="secondary" onClick={() => remember(Object.fromEntries(students.map((s) => [s._id, "absent"])))}>{t.attendance.markAllAbsent}</Button>
         </div>
       ) : null}
       {!classId ? <EmptyState title={t.attendance.pickClass} /> : null}
@@ -185,7 +204,7 @@ export default function AttendancePage() {
                       item === "late" && (value === item ? "bg-amber-500 text-white" : "bg-amber-50 text-amber-800"),
                       item === "leave" && (value === item ? "bg-stone-700 text-white" : "bg-muted text-muted-foreground")
                     )}
-                    onClick={() => setStatus((prev) => ({ ...prev, [student._id]: item }))}
+                    onClick={() => remember((prev) => ({ ...prev, [student._id]: item }))}
                   >
                     {item === "present" ? t.common.present : item === "absent" ? t.common.absent : item === "late" ? t.common.late : t.common.leave}
                   </button>

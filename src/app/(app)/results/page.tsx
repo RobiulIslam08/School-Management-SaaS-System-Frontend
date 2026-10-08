@@ -67,8 +67,8 @@ type SubjectRow = {
   markDistribution?: { cq: number; mcq: number; practical: number; attendance: number };
 };
 
-function subjectKey(studentId: string, subjectId: string) {
-  return `${studentId}:${subjectId}`;
+function subjectKey(examTypeId: string, studentId: string, subjectId: string) {
+  return `${examTypeId}:${studentId}:${subjectId}`;
 }
 
 function subjectIdOf(mark: SubjectMarkSaved): string | undefined {
@@ -117,6 +117,7 @@ export default function ResultsPage() {
   const [dirty, setDirty] = useState<Record<string, boolean>>({});
   const [savingAll, setSavingAll] = useState(false);
   const [focusStudentId, setFocusStudentId] = useState<string | null>(null);
+  const [studentIdQuery, setStudentIdQuery] = useState("");
 
   const { data, isLoading, isError, refetch } = useGetResultsQuery(
     examTypeId ? { examTypeId, classId, section } : undefined
@@ -135,7 +136,14 @@ export default function ResultsPage() {
     .slice()
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   const studentList = (students?.data ?? []) as StudentRow[];
+  const idNeedle = studentIdQuery.trim().toLowerCase();
+  const shownStudents = idNeedle
+    ? studentList.filter((student) => student.studentId.toLowerCase().includes(idNeedle))
+    : studentList;
   const rows = (data?.data ?? []) as ResultRow[];
+  const shownResults = idNeedle
+    ? rows.filter((row) => (row.studentId?.studentId ?? "").toLowerCase().includes(idNeedle))
+    : rows;
   const subject = subjectList.find((item) => item._id === subjectId);
   const caps = subject?.markDistribution;
   const showPractical = (caps?.practical ?? 0) > 0;
@@ -152,11 +160,11 @@ export default function ResultsPage() {
 
   // Hydrate draft from saved marks when results/subject change
   useEffect(() => {
-    if (!subjectId || !studentList.length) return;
+    if (!examTypeId || !subjectId || !studentList.length) return;
     setDraft((prev) => {
       const next = { ...prev };
       for (const student of studentList) {
-        const key = subjectKey(student._id, subjectId);
+        const key = subjectKey(examTypeId, student._id, subjectId);
         if (dirty[key]) continue;
         const saved = resultByStudent.get(student._id);
         const mark = saved?.subjectMarks?.find((item) => subjectIdOf(item) === subjectId);
@@ -164,7 +172,7 @@ export default function ResultsPage() {
       }
       return next;
     });
-  }, [subjectId, studentList, resultByStudent, dirty]);
+  }, [examTypeId, subjectId, studentList, resultByStudent, dirty]);
 
   const progress = useMemo(() => {
     let completeStudents = 0;
@@ -189,12 +197,12 @@ export default function ResultsPage() {
 
   function getDraft(studentId: string): MarkDraft {
     if (!subjectId) return emptyMarks();
-    return draft[subjectKey(studentId, subjectId)] ?? emptyMarks();
+    return draft[subjectKey(examTypeId, studentId, subjectId)] ?? emptyMarks();
   }
 
   function setDraftField(studentId: string, key: keyof MarkDraft, value: string) {
     if (!subjectId) return;
-    const sk = subjectKey(studentId, subjectId);
+    const sk = subjectKey(examTypeId, studentId, subjectId);
     const current = draft[sk] ?? emptyMarks();
     setDraft((prev) => ({
       ...prev,
@@ -205,7 +213,7 @@ export default function ResultsPage() {
 
   async function saveOne(studentId: string, opts?: { silent?: boolean }) {
     if (!examTypeId || !subjectId) return false;
-    const sk = subjectKey(studentId, subjectId);
+    const sk = subjectKey(examTypeId, studentId, subjectId);
     const marks = draft[sk] ?? emptyMarks();
     const saved = resultByStudent.get(studentId);
     const savedMark = saved?.subjectMarks?.find((item) => subjectIdOf(item) === subjectId);
@@ -241,7 +249,9 @@ export default function ResultsPage() {
 
   async function saveAllDirty() {
     if (!examTypeId || !subjectId) return;
-    const keys = Object.keys(dirty).filter((k) => dirty[k] && k.endsWith(`:${subjectId}`));
+    const prefix = `${examTypeId}:`;
+    const suffix = `:${subjectId}`;
+    const keys = Object.keys(dirty).filter((k) => dirty[k] && k.startsWith(prefix) && k.endsWith(suffix));
     if (!keys.length) {
       toast.message(t.results.saveMarks);
       return;
@@ -249,14 +259,16 @@ export default function ResultsPage() {
     setSavingAll(true);
     let ok = 0;
     for (const key of keys) {
-      const studentId = key.split(":")[0];
+      const studentId = key.slice(prefix.length, key.length - suffix.length);
       if (await saveOne(studentId, { silent: true })) ok += 1;
     }
     setSavingAll(false);
     toast.success(`${ok}/${keys.length}`);
   }
 
-  const dirtyCount = Object.values(dirty).filter(Boolean).length;
+  const dirtyCount = Object.keys(dirty).filter(
+    (key) => dirty[key] && examTypeId && subjectId && key.startsWith(`${examTypeId}:`) && key.endsWith(`:${subjectId}`)
+  ).length;
 
   const marksheetsHref =
     examTypeId && classId
@@ -299,7 +311,15 @@ export default function ResultsPage() {
       />
 
       <div className="sticky top-16 z-20 -mx-4 mb-4 border-b border-border bg-canvas/95 px-4 py-3 backdrop-blur md:-mx-8 md:px-8">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <Field label={t.students.id} htmlFor="res-student-id">
+            <Input
+              id="res-student-id"
+              value={studentIdQuery}
+              onChange={(e) => setStudentIdQuery(e.target.value)}
+              placeholder={t.students.id}
+            />
+          </Field>
           <Field label={t.common.class} htmlFor="res-class">
             <Select
               id="res-class"
@@ -308,7 +328,6 @@ export default function ResultsPage() {
                 setClassId(e.target.value);
                 setSection(sectionNames(classList.find((item) => item._id === e.target.value)?.sections as never)[0] ?? "");
                 setSubjectId("");
-                setDirty({});
               }}
             >
               <option value="">{t.common.class}</option>
@@ -381,13 +400,17 @@ export default function ResultsPage() {
           {classId && examTypeId && subjectId && !studentList.length ? (
             <EmptyState title={t.results.emptyStudents} hint={t.results.gridHint} />
           ) : null}
-          {classId && examTypeId && subjectId && studentList.length ? (
+          {classId && examTypeId && subjectId && studentList.length && !shownStudents.length ? (
+            <EmptyState title={t.results.emptyStudents} hint={t.students.id} />
+          ) : null}
+          {classId && examTypeId && subjectId && shownStudents.length ? (
             <>
               {/* Desktop grid */}
               <div className="hidden overflow-x-auto rounded-xl border border-border bg-white md:block">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/70 text-left text-xs uppercase text-muted-foreground">
+                      <th className="px-3 py-3">{t.students.id}</th>
                       <th className="px-3 py-3">{t.common.student}</th>
                       <th className="px-3 py-3">
                         {t.results.cq}/{caps?.cq ?? 0}
@@ -411,8 +434,8 @@ export default function ResultsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {studentList.map((student) => {
-                      const sk = subjectKey(student._id, subjectId);
+                    {shownStudents.map((student) => {
+                      const sk = subjectKey(examTypeId, student._id, subjectId);
                       const marks = getDraft(student._id);
                       const saved = resultByStudent.get(student._id);
                       const savedMark = saved?.subjectMarks?.find((item) => subjectIdOf(item) === subjectId);
@@ -428,12 +451,10 @@ export default function ResultsPage() {
                           id={`student-row-${student._id}`}
                           className={cn("border-t", focusStudentId === student._id && "bg-primary/5")}
                         >
+                          <td className="px-3 py-2 font-mono text-sm">{student.studentId || "—"}</td>
                           <td className="px-3 py-2">
                             <p className="font-medium">{student.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {student.studentId}
-                              {student.rollNo ? ` · ${student.rollNo}` : ""}
-                            </p>
+                            {student.rollNo ? <p className="text-xs text-muted-foreground">{student.rollNo}</p> : null}
                           </td>
                           {(["cq", "mcq"] as const).map((key) => (
                             <td key={key} className="px-3 py-2">
@@ -498,8 +519,8 @@ export default function ResultsPage() {
 
               {/* Mobile cards */}
               <div className="grid gap-3 md:hidden">
-                {studentList.map((student) => {
-                  const sk = subjectKey(student._id, subjectId);
+                {shownStudents.map((student) => {
+                  const sk = subjectKey(examTypeId, student._id, subjectId);
                   const marks = getDraft(student._id);
                   const saved = resultByStudent.get(student._id);
                   const savedMark = saved?.subjectMarks?.find((item) => subjectIdOf(item) === subjectId);
@@ -508,7 +529,7 @@ export default function ResultsPage() {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <p className="font-medium">{student.name}</p>
-                          <p className="text-xs text-muted-foreground">{student.studentId}</p>
+                          <p className="text-xs text-muted-foreground">{t.students.id}: {student.studentId || "—"}</p>
                         </div>
                         <Badge>{dirty[sk] ? t.results.statusDraft : savedMark ? t.results.statusSaved : t.results.statusMissing}</Badge>
                       </div>
@@ -569,14 +590,15 @@ export default function ResultsPage() {
       {tab === "progress" ? (
         !classId || !examTypeId ? (
           <EmptyState title={t.results.needFields} hint={t.results.gridHint} />
-        ) : !subjectList.length || !studentList.length ? (
+        ) : !subjectList.length || !shownStudents.length ? (
           <EmptyState title={t.results.emptyStudents} hint={t.results.gridHint} />
         ) : (
           <div className="overflow-x-auto rounded-xl border border-border bg-white">
             <table className="min-w-full text-xs">
               <thead>
                 <tr className="border-b bg-muted/70 text-left">
-                  <th className="sticky left-0 z-10 bg-muted/70 px-3 py-3">{t.common.student}</th>
+                  <th className="sticky left-0 z-10 bg-muted/70 px-3 py-3">{t.students.id}</th>
+                  <th className="px-3 py-3">{t.common.student}</th>
                   {subjectList.map((sub) => (
                     <th key={sub._id} className="max-w-[5.5rem] truncate px-2 py-3" title={sub.name}>
                       {sub.name}
@@ -585,9 +607,10 @@ export default function ResultsPage() {
                 </tr>
               </thead>
               <tbody>
-                {studentList.map((student) => (
+                {shownStudents.map((student) => (
                   <tr key={student._id} className="border-t">
-                    <td className="sticky left-0 z-10 bg-white px-3 py-2 font-medium">{student.name}</td>
+                    <td className="sticky left-0 z-10 bg-white px-3 py-2 font-mono">{student.studentId || "—"}</td>
+                    <td className="px-3 py-2 font-medium">{student.name}</td>
                     {subjectList.map((sub) => {
                       const has = progress.matrix[student._id]?.[sub._id];
                       return (
@@ -622,15 +645,16 @@ export default function ResultsPage() {
 
       <div className="mt-8">
         <h2 className="mb-3 text-sm font-semibold">{t.results.merit}</h2>
-        {!rows.length ? (
+        {!shownResults.length ? (
           <EmptyState title={t.results.merit} hint={t.results.gridHint} />
         ) : (
           <DataTable
-            rows={rows}
+            rows={shownResults}
             rowKey={(row) => row._id}
             pageSize={15}
             columns={[
               { header: t.results.meritCol, sortValue: (row) => row.meritPosition ?? 9999, cell: (row) => row.meritPosition ?? "—" },
+              { header: t.students.id, sortValue: (row) => row.studentId?.studentId ?? "", cell: (row) => row.studentId?.studentId ?? "—" },
               { header: t.common.student, sortValue: (row) => row.studentId?.name ?? "", cell: (row) => row.studentId?.name ?? "—" },
               { header: t.results.gpa, sortValue: (row) => row.gpa, cell: (row) => row.gpa },
               { header: t.results.grade, cell: (row) => row.letter },
