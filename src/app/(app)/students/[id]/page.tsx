@@ -149,12 +149,13 @@ function StudentProfileInner() {
   if (isError || !student) return <QueryError onRetry={refetch} />;
 
   const displayClass = student.classId?.name ? classFamilyLabel(student.classId.name) : "";
-  const courseName = [displayClass, student.group && student.group !== "None" ? student.group : "", student.section].filter(Boolean).join(" · ");
+  const courseName = [displayClass, student.group && student.group !== "None" ? student.group : ""].filter(Boolean).join(" · ");
   const parsedDob = student.dob ? new Date(student.dob) : null;
   const dob = parsedDob && !Number.isNaN(parsedDob.getTime()) ? parsedDob.toLocaleDateString() : "";
 
   return (
     <div>
+      <div className="no-print">
       <PageHeader
         title={student.name}
         subtitle={`${student.studentId} · ${displayClass} ${student.group && student.group !== "None" ? student.group : ""} ${student.section ?? ""}`}
@@ -234,7 +235,8 @@ function StudentProfileInner() {
           </div>
         </Card>
       </div>
-      <div className="admission-print-root mt-8">
+      </div>
+      <div className="admission-print-root mt-8 print:mt-0">
         <h2 className="no-print mb-3 text-sm font-semibold">{t.students.admissionSlip}</h2>
         <AdmissionFormDocument
           settings={session?.data.settings}
@@ -250,6 +252,7 @@ function StudentProfileInner() {
             bloodGroup: student.bloodGroup,
             photoUrl: student.photoUrl,
             courseName,
+            section: student.section,
             fatherName: student.guardian?.fatherName,
             fatherNameBn: student.guardian?.fatherNameBn,
             fatherPhone: student.guardian?.fatherPhone || student.guardian?.phone,

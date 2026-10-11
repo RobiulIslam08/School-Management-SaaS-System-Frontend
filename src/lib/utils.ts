@@ -14,3 +14,4 @@ export function toLocalYmd(date: Date = new Date()): string {
 }
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
+export const PUBLIC_SITE_URL = process.env.NEXT_PUBLIC_PUBLIC_SITE_URL ?? "http://localhost:3001";

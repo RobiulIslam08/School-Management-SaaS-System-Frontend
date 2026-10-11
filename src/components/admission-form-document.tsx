@@ -24,6 +24,7 @@ export type AdmissionFormData = {
   bloodGroup?: string;
   photoUrl?: string;
   courseName?: string;
+  section?: string;
   fatherName?: string;
   fatherNameBn?: string;
   fatherPhone?: string;
@@ -41,7 +42,7 @@ function dash(value?: string) {
 
 function FieldCell({ label, value, wide }: { label: string; value?: string; wide?: boolean }) {
   return (
-    <div className={`admission-cell flex min-w-0 border-b border-r border-foreground/25 ${wide ? "col-span-2" : ""}`}>
+    <div className={`admission-cell flex min-w-0 border-b border-r border-foreground/25 ${wide ? "col-span-2 print:col-span-1" : ""}`}>
       <div className="flex w-[38%] max-w-[9.5rem] shrink-0 items-center bg-[#f3f0ea] px-2 py-1.5 text-[11px] font-semibold leading-snug text-foreground print:bg-[#f3f0ea]">
         {label}
       </div>
@@ -100,11 +101,11 @@ export function AdmissionFormDocument({
 
   return (
     <article
-      className="admission-sheet mx-auto w-full max-w-[210mm] bg-white text-foreground shadow-sm print:flex print:h-[277mm] print:max-h-[277mm] print:max-w-none print:flex-col print:overflow-hidden print:shadow-none"
+      className="admission-sheet mx-auto w-full max-w-[210mm] bg-white text-foreground shadow-sm print:max-w-none print:shadow-none"
       style={{ ["--admission-accent" as string]: accent }}
     >
-      <div className="admission-frame border-[3px] border-foreground p-1 print:flex print:min-h-0 print:flex-1 print:flex-col print:border-2">
-        <div className="admission-inner border border-foreground/70 p-3 sm:p-3.5 print:flex print:min-h-0 print:flex-1 print:flex-col print:p-2.5">
+      <div className="admission-frame border-[3px] border-foreground p-1 print:border-2">
+        <div className="admission-inner border border-foreground/70 p-3 sm:p-3.5 print:p-2.5">
           {/* Institutional header */}
           <header className="relative grid grid-cols-[3.25rem_minmax(0,1fr)_3.25rem] items-center gap-2 pb-2.5 sm:grid-cols-[5rem_minmax(0,1fr)_5rem] sm:gap-2.5">
             <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-[color:var(--admission-accent)] bg-[#f8faf8] sm:h-20 sm:w-20">
@@ -165,7 +166,7 @@ export function AdmissionFormDocument({
           {/* Student particulars */}
           <section className="mb-2 overflow-hidden border border-foreground/40">
             <SectionTitle accent={accent}>{t.students.stepStudent}</SectionTitle>
-            <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2">
+            <div className="admission-fields grid grid-cols-1 sm:grid-cols-2">
               <FieldCell label={t.students.studentName} value={data.name || data.nameBn} wide />
               <FieldCell label={t.students.id} value={data.studentId} />
               <FieldCell label={t.common.phone} value={data.phone} />
@@ -175,12 +176,13 @@ export function AdmissionFormDocument({
               <FieldCell label={t.common.religion} value={data.religion} />
               <FieldCell label={t.common.blood} value={data.bloodGroup} />
               <FieldCell label={t.students.courseName} value={data.courseName} wide />
+              <FieldCell label={t.common.section} value={data.section} wide />
             </div>
           </section>
 
           <section className="mb-2 overflow-hidden border border-foreground/40">
             <SectionTitle accent={accent}>{t.students.stepGuardian}</SectionTitle>
-            <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2">
+            <div className="admission-fields grid grid-cols-1 sm:grid-cols-2">
               <FieldCell label={t.students.fatherNameLabel} value={data.fatherName || data.fatherNameBn} />
               <FieldCell label={t.students.fatherMobile} value={data.fatherPhone} />
               <FieldCell label={t.students.motherNameLabel} value={data.motherName || data.motherNameBn} />
@@ -188,7 +190,7 @@ export function AdmissionFormDocument({
             </div>
           </section>
 
-          <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-2 print:grid-cols-2">
+          <div className="admission-fields mb-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
             <AddressPanel title={t.students.presentAddress} address={data.address} accent={accent} />
             <AddressPanel title={t.students.permanentAddress} address={data.permanentAddress || data.address} accent={accent} />
           </div>
@@ -199,7 +201,7 @@ export function AdmissionFormDocument({
           </p>
 
           {/* Signatures */}
-          <div className="admission-signs mt-6 grid grid-cols-2 gap-10 print:mt-auto">
+          <div className="admission-signs mt-6 grid grid-cols-2 gap-10">
             <div className="text-center">
               <div className="mx-auto mb-1 h-8 w-full max-w-[12rem] border-b border-foreground" />
               <p className="text-[11px] font-semibold">{t.common.guardian}</p>

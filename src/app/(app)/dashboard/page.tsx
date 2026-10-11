@@ -1,15 +1,19 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { GraduationCap, Users, School, Percent, Wallet, Banknote, CalendarDays, Bell } from "lucide-react";
 import { Bar, BarChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { ConfirmDialog } from "@/components/dialog";
 import { PageHeader } from "@/components/page-header";
+import { canAccess } from "@/components/nav";
 import { QueryError, TableSkeleton, EmptyState } from "@/components/query-state";
 import { StatCard } from "@/components/stat-card";
 import { Button } from "@/components/ui";
-import { useGetDashboardQuery, useMeQuery } from "@/lib/api/schoolApi";
+import { useGetDashboardQuery, useMeQuery, usePromoteAllStudentsMutation } from "@/lib/api/schoolApi";
 import { useI18n } from "@/lib/i18n";
+import { toastApiResult } from "@/lib/toast-api";
+import { PUBLIC_SITE_URL } from "@/lib/utils";
 
 type DashboardData = {
   students: number;
@@ -39,7 +43,10 @@ export default function DashboardPage() {
   const { t } = useI18n();
   const { data: session } = useMeQuery();
   const { data, isLoading, isError, refetch } = useGetDashboardQuery();
+  const [promoteAll, { isLoading: promoting }] = usePromoteAllStudentsMutation();
+  const [promoteOpen, setPromoteOpen] = useState(false);
   const stats = data?.data as DashboardData | undefined;
+  const canPromote = canAccess(session?.data.user.permissions ?? [], "students:approve");
 
   return (
     <div>
@@ -69,6 +76,19 @@ export default function DashboardPage() {
               <Link href="/students/admit"><Button variant="secondary">{t.dashboard.addStudent}</Button></Link>
               <Link href="/results"><Button variant="secondary">{t.dashboard.enterResult}</Button></Link>
               <Link href="/notices"><Button variant="secondary">{t.dashboard.sendNotice}</Button></Link>
+              <a
+                className="inline-flex h-11 items-center justify-center rounded-md border border-border bg-white px-4 text-sm font-medium hover:bg-muted"
+                href={PUBLIC_SITE_URL}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {t.dashboard.openSite}
+              </a>
+              {canPromote ? (
+                <Button type="button" variant="secondary" onClick={() => setPromoteOpen(true)}>
+                  {t.dashboard.promoteAll}
+                </Button>
+              ) : null}
             </div>
           </section>
 
@@ -133,6 +153,18 @@ export default function DashboardPage() {
       ) : !isLoading && !isError ? (
         <EmptyState title={t.dashboard.empty} hint={t.dashboard.emptyHint} />
       ) : null}
+      <ConfirmDialog
+        open={promoteOpen}
+        title={t.dashboard.promoteAll}
+        message={t.dashboard.promoteAllHint}
+        confirmLabel={t.dashboard.promoteAllConfirm}
+        busy={promoting}
+        onClose={() => setPromoteOpen(false)}
+        onConfirm={async () => {
+          const result = await promoteAll();
+          if (toastApiResult(result, t.dashboard.promoteAll, t.common.loadError)) setPromoteOpen(false);
+        }}
+      />
     </div>
   );
 }

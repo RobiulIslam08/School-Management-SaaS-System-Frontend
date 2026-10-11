@@ -144,7 +144,7 @@ export default function AdmitPage() {
   function courseLabel() {
     const selected = classList.find((item) => item._id === form.classId);
     const label = selected ? classFamilyLabel(selected.name) : "";
-    const parts = [label, form.group !== "None" ? form.group : "", form.section].filter(Boolean);
+    const parts = [label, form.group !== "None" ? form.group : ""].filter(Boolean);
     return parts.join(" · ");
   }
 
@@ -163,6 +163,7 @@ export default function AdmitPage() {
       bloodGroup: row.bloodGroup,
       photoUrl: row.photoUrl || overrides?.photoUrl,
       courseName: courseLabel(),
+      section: row.section,
       fatherName: form.guardian.fatherName,
       fatherNameBn: form.guardian.fatherNameBn,
       fatherPhone: form.guardian.fatherPhone,
@@ -276,6 +277,7 @@ export default function AdmitPage() {
             ...formDocData(created),
             studentId: created.studentId,
             courseName: className,
+            section: created.section || form.section,
             dob: created.dob ? new Date(created.dob).toLocaleDateString() : form.dob,
             address: created.address ?? form.address,
             permanentAddress: created.permanentAddress ?? (samePermanent ? form.address : form.permanentAddress),

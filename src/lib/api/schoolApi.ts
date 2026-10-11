@@ -99,6 +99,13 @@ export const schoolApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/students/promote", method: "POST", body }),
       invalidatesTags: ["Students"],
     }),
+    promoteAllStudents: build.mutation<
+      Envelope<{ promoted: number; alumni: number; skipped: number; academicYear: string; yearAdvanced: boolean }>,
+      void
+    >({
+      query: () => ({ url: "/students/promote-all", method: "POST", body: {} }),
+      invalidatesTags: ["Students", "Session"],
+    }),
     getTeachers: build.query<Envelope<unknown[]>, string | void>({
       query: (q) => (q ? `/teachers?q=${q}` : "/teachers"),
       providesTags: ["Teachers"],
@@ -346,6 +353,7 @@ export const {
   useGetStudentQuery,
   useCreateStudentMutation,
   usePromoteStudentsMutation,
+  usePromoteAllStudentsMutation,
   useGetTeachersQuery,
   useCreateTeacherMutation,
   useGetAttendanceQuery,
