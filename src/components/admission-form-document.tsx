@@ -43,10 +43,10 @@ function dash(value?: string) {
 function FieldCell({ label, value, wide }: { label: string; value?: string; wide?: boolean }) {
   return (
     <div className={`admission-cell flex min-w-0 border-b border-r border-foreground/25 ${wide ? "col-span-2 is-wide" : "col-span-1"}`}>
-      <div className="flex w-[38%] max-w-[9.5rem] shrink-0 items-center bg-[#f3f0ea] px-2 py-1 text-[10.5px] font-semibold leading-tight text-foreground print:bg-[#f3f0ea]">
+      <div className="flex w-[38%] max-w-[9.5rem] shrink-0 items-center bg-[#f3f0ea] px-2.5 py-1.5 text-[11px] font-semibold leading-snug text-foreground print:bg-[#f3f0ea]">
         {label}
       </div>
-      <div className="min-w-0 flex-1 px-2.5 py-1 text-[11px] font-medium leading-tight tracking-wide text-foreground">
+      <div className="min-w-0 flex-1 px-3 py-1.5 text-[12px] font-medium leading-snug tracking-wide text-foreground">
         {dash(value)}
       </div>
     </div>
@@ -56,7 +56,7 @@ function FieldCell({ label, value, wide }: { label: string; value?: string; wide
 function SectionTitle({ children, accent }: { children: string; accent?: string }) {
   return (
     <div
-      className="border-b border-foreground/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
+      className="border-b border-foreground/30 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white"
       style={{ background: accent || "#14532d" }}
     >
       {children}
@@ -101,11 +101,11 @@ export function AdmissionFormDocument({
 
   return (
     <article
-      className="admission-sheet mx-auto w-full max-w-[210mm] bg-white text-foreground shadow-sm print:max-w-none print:shadow-none"
+      className="admission-sheet mx-auto flex w-full max-w-[210mm] min-h-[278mm] flex-col bg-white text-foreground shadow-sm print:max-w-none print:shadow-none"
       style={{ ["--admission-accent" as string]: accent }}
     >
-      <div className="admission-frame border-[3px] border-foreground p-1 print:border-2">
-        <div className="admission-inner border border-foreground/70 p-2.5 sm:p-3 print:p-2">
+      <div className="admission-frame flex flex-1 flex-col border-[3px] border-foreground p-1 print:border-2">
+        <div className="admission-inner flex flex-1 flex-col justify-between border border-foreground/70 p-3 sm:p-4 print:p-2.5">
           {/* Institutional header */}
           <header className="relative grid grid-cols-[3.5rem_minmax(0,1fr)_3.5rem] items-center gap-2 pb-1.5 sm:grid-cols-[4.5rem_minmax(0,1fr)_4.5rem] sm:gap-2">
             <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-[color:var(--admission-accent)] bg-[#f8faf8] sm:h-16 sm:w-16">
@@ -155,16 +155,16 @@ export function AdmissionFormDocument({
 
           {/* Title band */}
           <div
-            className="mb-1.5 flex items-center justify-center border-y-2 border-foreground py-1"
+            className="mb-2 flex items-center justify-center border-y-2 border-foreground py-1.5"
             style={{ background: `color-mix(in srgb, ${accent} 12%, white)` }}
           >
-            <h2 className="text-center text-[13px] font-extrabold uppercase tracking-[0.14em]" style={{ color: accent }}>
+            <h2 className="text-center text-[14px] font-extrabold uppercase tracking-[0.14em]" style={{ color: accent }}>
               {t.students.admissionFormTitle}
             </h2>
           </div>
 
           {/* Student particulars */}
-          <section className="mb-1.5 overflow-hidden border border-foreground/40">
+          <section className="mb-2 overflow-hidden border border-foreground/40">
             <SectionTitle accent={accent}>{t.students.stepStudent}</SectionTitle>
             <div className="admission-grid grid grid-cols-2">
               <FieldCell label={t.students.studentName} value={data.name || data.nameBn} wide />
@@ -180,7 +180,7 @@ export function AdmissionFormDocument({
             </div>
           </section>
 
-          <section className="mb-1.5 overflow-hidden border border-foreground/40">
+          <section className="mb-2 overflow-hidden border border-foreground/40">
             <SectionTitle accent={accent}>{t.students.stepGuardian}</SectionTitle>
             <div className="admission-grid grid grid-cols-2">
               <FieldCell label={t.students.fatherNameLabel} value={data.fatherName || data.fatherNameBn} />
@@ -190,27 +190,27 @@ export function AdmissionFormDocument({
             </div>
           </section>
 
-          <div className="admission-addresses mb-1.5 grid grid-cols-2 gap-2">
+          <div className="admission-addresses mb-2 grid grid-cols-2 gap-2.5">
             <AddressPanel title={t.students.presentAddress} address={data.address} accent={accent} />
             <AddressPanel title={t.students.permanentAddress} address={data.permanentAddress || data.address} accent={accent} />
           </div>
 
           {/* Declaration */}
-          <p className="mb-2 text-[9px] leading-tight text-foreground/80">
+          <p className="my-1.5 text-[9.5px] leading-relaxed text-foreground/85">
             {t.students.admissionDeclaration}
           </p>
 
           {/* Signatures */}
-          <div className="admission-signs mt-4 grid grid-cols-2 gap-10">
+          <div className="admission-signs mt-3 pt-2 grid grid-cols-2 gap-10">
             <div className="text-center">
-              <div className="mx-auto mb-1 h-6 w-full max-w-[11rem] border-b border-foreground" />
-              <p className="text-[10px] font-semibold">{t.common.guardian}</p>
-              <p className="text-[8.5px] text-muted-foreground">{t.students.signatureHint}</p>
+              <div className="mx-auto mb-1.5 h-10 w-full max-w-[12rem] border-b border-foreground" />
+              <p className="text-[11px] font-semibold">{t.common.guardian}</p>
+              <p className="text-[9px] text-muted-foreground">{t.students.signatureHint}</p>
             </div>
             <div className="text-center">
-              <div className="mx-auto mb-1 h-6 w-full max-w-[11rem] border-b border-foreground" />
-              <p className="text-[10px] font-semibold">{t.staff.admin}</p>
-              <p className="text-[8.5px] text-muted-foreground">{t.students.sealHint}</p>
+              <div className="mx-auto mb-1.5 h-10 w-full max-w-[12rem] border-b border-foreground" />
+              <p className="text-[11px] font-semibold">{t.staff.admin}</p>
+              <p className="text-[9px] text-muted-foreground">{t.students.sealHint}</p>
             </div>
           </div>
         </div>
