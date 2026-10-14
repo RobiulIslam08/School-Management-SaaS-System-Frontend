@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
-import { Button, Field, Input } from "@/components/ui";
+import { Button, Field, Input, Textarea } from "@/components/ui";
 import { useUpdateTeacherMutation } from "@/lib/api/peopleApi";
 import { useCreateTeacherMutation, useGetSubjectsQuery, useGetTeachersQuery } from "@/lib/api/schoolApi";
 import { activeTone } from "@/lib/status";
@@ -27,6 +27,8 @@ type TeacherRow = {
   phone?: string;
   email?: string;
   designation?: string;
+  bioBn?: string;
+  bioEn?: string;
   isActive?: boolean;
   joiningDate?: string;
   retirementDate?: string;
@@ -199,6 +201,8 @@ const emptyForm = {
   email: "",
   photoUrl: "",
   designation: "Teacher",
+  bioBn: "",
+  bioEn: "",
   joiningDate: "",
   retirementDate: "",
   basic: "" as string | number,
@@ -351,6 +355,8 @@ export default function TeachersPage() {
       email: form.email,
       photoUrl: form.photoUrl,
       designation: form.designation,
+      bioBn: form.bioBn,
+      bioEn: form.bioEn,
       joiningDate: form.joiningDate || undefined,
       retirementDate: form.retirementDate || undefined,
       subjects: form.subjects,
@@ -467,6 +473,8 @@ export default function TeachersPage() {
                 email: row.email ?? "",
                 photoUrl: row.photoUrl ?? "",
                 designation: row.designation ?? "Teacher",
+                bioBn: row.bioBn ?? "",
+                bioEn: row.bioEn ?? "",
                 joiningDate: row.joiningDate ? new Date(row.joiningDate).toISOString().slice(0, 10) : "",
                 retirementDate: row.retirementDate ? new Date(row.retirementDate).toISOString().slice(0, 10) : "",
                 basic: row.salaryStructure?.basic ?? "",
@@ -575,6 +583,16 @@ export default function TeachersPage() {
           <Field label={t.teachers.designation}>
             <Input value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} />
           </Field>
+          <div className="md:col-span-2">
+            <Field label={`${t.teachers.message} · বাংলা`}>
+              <Textarea maxLength={2000} rows={4} value={form.bioBn} onChange={(e) => setForm({ ...form, bioBn: e.target.value })} />
+            </Field>
+          </div>
+          <div className="md:col-span-2">
+            <Field label={`${t.teachers.message} · English`}>
+              <Textarea maxLength={2000} rows={4} value={form.bioEn} onChange={(e) => setForm({ ...form, bioEn: e.target.value })} />
+            </Field>
+          </div>
           <Field label={t.teachers.basic}>
             <Input
               type="number"
@@ -667,6 +685,16 @@ export default function TeachersPage() {
           <Field label={t.teachers.designation}>
             <Input value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} />
           </Field>
+          <div className="md:col-span-2">
+            <Field label={`${t.teachers.message} · বাংলা`}>
+              <Textarea maxLength={2000} rows={4} value={form.bioBn} onChange={(e) => setForm({ ...form, bioBn: e.target.value })} />
+            </Field>
+          </div>
+          <div className="md:col-span-2">
+            <Field label={`${t.teachers.message} · English`}>
+              <Textarea maxLength={2000} rows={4} value={form.bioEn} onChange={(e) => setForm({ ...form, bioEn: e.target.value })} />
+            </Field>
+          </div>
           <Field label={t.teachers.basic}>
             <Input
               type="number"
