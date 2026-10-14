@@ -39,12 +39,13 @@ export type PageRow = {
 
 export const BOARDS = [
   { key: "principal", bn: "অধ্যক্ষ", en: "Principal" },
-  { key: "vice", bn: "সহকারী প্রধান শিক্ষক", en: "Vice principal" },
+  { key: "vice", bn: "সহকারি অধ্যক্ষ", en: "Assistant principal" },
   { key: "admission", bn: "ভর্তি শাখা", en: "Admission office" },
   { key: "accounts", bn: "হিসাব শাখা", en: "Accounts" },
   { key: "librarian", bn: "গ্রন্থাগারিক", en: "Librarian" },
   { key: "exam", bn: "পরীক্ষা নিয়ন্ত্রক", en: "Exam controller" },
   { key: "clerk", bn: "অফিস সহকারী", en: "Office assistant" },
+  { key: "committee", bn: "স্কুল কমিটি", en: "School committee" },
   { key: "governing", bn: "পরিচালনা পর্ষদ", en: "Governing body" },
   { key: "council", bn: "একাডেমিক কাউন্সিল", en: "Academic council" },
   { key: "syndicate", bn: "সিন্ডিকেট", en: "Syndicate" },
