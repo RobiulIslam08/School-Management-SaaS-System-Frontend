@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
   --background: #f6f4ef;
   --foreground: #1c1917;
   --canvas: #f6f4ef;
@@ -11,6 +12,14 @@
   --border: #e7e0d4;
   --sidebar: #fffdf8;
   --radius: 0.75rem;
+}
+
+html, body {
+  color-scheme: light;
+}
+
+button, input, select, textarea {
+  color-scheme: light;
 }
 
 @theme inline {

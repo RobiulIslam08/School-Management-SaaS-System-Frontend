@@ -19,6 +19,9 @@ const notoBengali = Noto_Sans_Bengali({
 export const metadata: Metadata = {
   title: "School Management OS",
   description: "Isolated school operations dashboard",
+  other: {
+    "color-scheme": "light",
+  },
   icons: {
     icon: [{ url: "/icon", type: "image/png" }],
     apple: [{ url: "/apple-icon", type: "image/png" }],
@@ -31,8 +34,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="bn"
       translate="no"
       className={`notranslate ${inter.variable} ${notoBengali.variable} h-full antialiased`}
+      style={{ colorScheme: "light" }}
       suppressHydrationWarning
     >
+      <head>
+        <meta name="color-scheme" content="light" />
+      </head>
       <body className="min-h-full bg-canvas font-sans text-foreground" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
