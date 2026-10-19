@@ -33,7 +33,7 @@ export const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, Fetch
   api,
   extraOptions
 ) => {
-  let result = await rawBaseQuery(args, api, extraOptions);
+  const result = await rawBaseQuery(args, api, extraOptions);
   if (result.error?.status !== 401 || shouldSkipSessionRefresh(requestUrl(args))) {
     return result;
   }
@@ -73,6 +73,12 @@ export const baseApi = createApi({
     "Certificates",
     "Routines",
     "Website",
+    "Calendar",
+    "AdmissionExams",
+    "SeatPlans",
+    "LectureMaterials",
+    "Trainings",
+    "TimeAttendance",
   ],
   baseQuery: baseQueryWithReauth,
   endpoints: () => ({}),

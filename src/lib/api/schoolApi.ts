@@ -1,6 +1,61 @@
 import { baseApi, type Envelope } from "./baseApi";
 import type { FeatureMap, SchoolSettings, SessionPayload } from "../types";
 
+export interface PassListRow {
+  _id: string;
+  studentId?: {
+    _id?: string;
+    name?: string;
+    nameBn?: string;
+    studentId?: string;
+    rollNo?: string;
+    section?: string;
+    classId?: { name?: string };
+  };
+  gpa?: number;
+  letter?: string;
+  totalObtained?: number;
+  meritPosition?: number;
+}
+
+export interface FailListRow {
+  _id: string;
+  studentId?: {
+    _id?: string;
+    name?: string;
+    nameBn?: string;
+    studentId?: string;
+    rollNo?: string;
+    section?: string;
+    classId?: { name?: string };
+  };
+  gpa?: number;
+  letter?: string;
+  failedSubjects?: Array<{
+    subjectName?: string;
+    obtainedMarks?: number;
+    passMarks?: number;
+  }>;
+}
+
+export interface ExamStatsResult {
+  total: number;
+  passed: number;
+  failed: number;
+  passRate: number;
+  avgGpa: number;
+  avgPercent: number;
+  subjectStats: Array<{
+    subjectId: string;
+    name: string;
+    code: string;
+    avgObtained: number;
+    avgPercent: number;
+    passRate: number;
+    count: number;
+  }>;
+}
+
 export const schoolApi = baseApi.injectEndpoints({
   overrideExisting: true,
   endpoints: (build) => ({
@@ -328,6 +383,222 @@ export const schoolApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/certificates", method: "POST", body }),
       invalidatesTags: ["Certificates"],
     }),
+    // Routines
+    getRoutines: build.query<Envelope<Record<string, unknown>[]>, { classId?: string; teacherId?: string; day?: string } | void>({
+      query: (arg) => {
+        const p = new URLSearchParams();
+        if (arg?.classId) p.set("classId", arg.classId);
+        if (arg?.teacherId) p.set("teacherId", arg.teacherId);
+        if (arg?.day) p.set("day", arg.day);
+        const qs = p.toString();
+        return `/routines${qs ? `?${qs}` : ""}`;
+      },
+      providesTags: ["Routines"],
+    }),
+    createRoutineSlot: build.mutation<Envelope<Record<string, unknown>>, Record<string, unknown>>({
+      query: (body) => ({ url: "/routines", method: "POST", body }),
+      invalidatesTags: ["Routines"],
+    }),
+    deleteRoutineSlot: build.mutation<Envelope<Record<string, unknown>>, string>({
+      query: (id) => ({ url: `/routines/${id}`, method: "DELETE" }),
+      invalidatesTags: ["Routines"],
+    }),
+    // Result Enhancements
+    getPassList: build.query<
+      Envelope<PassListRow[]>,
+      { examTypeId: string; classId?: string; section?: string }
+    >({
+      query: ({ examTypeId, classId, section }) => {
+        const p = new URLSearchParams();
+        if (classId) p.set("classId", classId);
+        if (section) p.set("section", section);
+        const qs = p.toString();
+        return `/results/${examTypeId}/pass-list${qs ? `?${qs}` : ""}`;
+      },
+      providesTags: ["Results"],
+    }),
+    getFailList: build.query<
+      Envelope<FailListRow[]>,
+      { examTypeId: string; classId?: string; section?: string }
+    >({
+      query: ({ examTypeId, classId, section }) => {
+        const p = new URLSearchParams();
+        if (classId) p.set("classId", classId);
+        if (section) p.set("section", section);
+        const qs = p.toString();
+        return `/results/${examTypeId}/fail-list${qs ? `?${qs}` : ""}`;
+      },
+      providesTags: ["Results"],
+    }),
+    getResultStats: build.query<
+      Envelope<ExamStatsResult>,
+      { examTypeId: string; classId?: string; section?: string }
+    >({
+      query: ({ examTypeId, classId, section }) => {
+        const p = new URLSearchParams();
+        if (classId) p.set("classId", classId);
+        if (section) p.set("section", section);
+        const qs = p.toString();
+        return `/results/${examTypeId}/stats${qs ? `?${qs}` : ""}`;
+      },
+      providesTags: ["Results"],
+    }),
+    // Academic Calendar
+    getCalendarEvents: build.query<
+      Envelope<Record<string, unknown>[]>,
+      { academicYear?: string; month?: string; year?: string; type?: string } | void
+    >({
+      query: (arg) => {
+        const p = new URLSearchParams();
+        if (arg?.academicYear) p.set("academicYear", arg.academicYear);
+        if (arg?.month) p.set("month", arg.month);
+        if (arg?.year) p.set("year", arg.year);
+        if (arg?.type) p.set("type", arg.type);
+        const qs = p.toString();
+        return `/calendar-events${qs ? `?${qs}` : ""}`;
+      },
+      providesTags: ["Calendar"],
+    }),
+    createCalendarEvent: build.mutation<Envelope<Record<string, unknown>>, Record<string, unknown>>({
+      query: (body) => ({ url: "/calendar-events", method: "POST", body }),
+      invalidatesTags: ["Calendar"],
+    }),
+    updateCalendarEvent: build.mutation<Envelope<Record<string, unknown>>, { id: string } & Record<string, unknown>>({
+      query: ({ id, ...body }) => ({ url: `/calendar-events/${id}`, method: "PATCH", body }),
+      invalidatesTags: ["Calendar"],
+    }),
+    deleteCalendarEvent: build.mutation<Envelope<Record<string, unknown>>, string>({
+      query: (id) => ({ url: `/calendar-events/${id}`, method: "DELETE" }),
+      invalidatesTags: ["Calendar"],
+    }),
+    // Admission Exams
+    getAdmissionExams: build.query<Envelope<Record<string, unknown>[]>, { academicYear?: string } | void>({
+      query: (arg) => (arg?.academicYear ? `/admission-exams?academicYear=${arg.academicYear}` : "/admission-exams"),
+      providesTags: ["AdmissionExams"],
+    }),
+    createAdmissionExam: build.mutation<Envelope<Record<string, unknown>>, Record<string, unknown>>({
+      query: (body) => ({ url: "/admission-exams", method: "POST", body }),
+      invalidatesTags: ["AdmissionExams"],
+    }),
+    updateAdmissionExam: build.mutation<Envelope<Record<string, unknown>>, { id: string } & Record<string, unknown>>({
+      query: ({ id, ...body }) => ({ url: `/admission-exams/${id}`, method: "PATCH", body }),
+      invalidatesTags: ["AdmissionExams"],
+    }),
+    deleteAdmissionExam: build.mutation<Envelope<Record<string, unknown>>, string>({
+      query: (id) => ({ url: `/admission-exams/${id}`, method: "DELETE" }),
+      invalidatesTags: ["AdmissionExams"],
+    }),
+    publishAdmissionExam: build.mutation<Envelope<Record<string, unknown>>, { id: string; isPublished: boolean }>({
+      query: ({ id, isPublished }) => ({ url: `/admission-exams/${id}/publish`, method: "PATCH", body: { isPublished } }),
+      invalidatesTags: ["AdmissionExams"],
+    }),
+    getAdmissionResults: build.query<Envelope<Record<string, unknown>[]>, string>({
+      query: (examId) => `/admission-exams/${examId}/results`,
+      providesTags: ["AdmissionExams"],
+    }),
+    upsertAdmissionResult: build.mutation<Envelope<Record<string, unknown>>, { examId: string } & Record<string, unknown>>({
+      query: ({ examId, ...body }) => ({ url: `/admission-exams/${examId}/results`, method: "POST", body }),
+      invalidatesTags: ["AdmissionExams"],
+    }),
+    bulkSaveAdmissionResults: build.mutation<Envelope<Record<string, unknown>[]>, { examId: string; results: Array<Record<string, unknown>> }>({
+      query: ({ examId, results }) => ({ url: `/admission-exams/${examId}/results/bulk`, method: "POST", body: { results } }),
+      invalidatesTags: ["AdmissionExams"],
+    }),
+    // Seat Plans
+    getSeatPlan: build.query<Envelope<Record<string, unknown>>, { examId: string; classId?: string; section?: string }>({
+      query: ({ examId, classId, section }) => {
+        const p = new URLSearchParams();
+        if (classId) p.set("classId", classId);
+        if (section) p.set("section", section);
+        const qs = p.toString();
+        return `/seat-plans/${examId}${qs ? `?${qs}` : ""}`;
+      },
+      providesTags: ["SeatPlans"],
+    }),
+    generateSeatPlan: build.mutation<Envelope<Record<string, unknown>>, Record<string, unknown>>({
+      query: (body) => ({ url: "/seat-plans/generate", method: "POST", body }),
+      invalidatesTags: ["SeatPlans"],
+    }),
+    deleteSeatPlan: build.mutation<Envelope<Record<string, unknown>>, string>({
+      query: (id) => ({ url: `/seat-plans/${id}`, method: "DELETE" }),
+      invalidatesTags: ["SeatPlans"],
+    }),
+    // Lecture Materials
+    getLectureMaterials: build.query<
+      Envelope<Record<string, unknown>[]>,
+      { classId?: string; subjectId?: string; teacherId?: string; academicYear?: string } | void
+    >({
+      query: (arg) => {
+        const p = new URLSearchParams();
+        if (arg?.classId) p.set("classId", arg.classId);
+        if (arg?.subjectId) p.set("subjectId", arg.subjectId);
+        if (arg?.teacherId) p.set("teacherId", arg.teacherId);
+        if (arg?.academicYear) p.set("academicYear", arg.academicYear);
+        const qs = p.toString();
+        return `/lecture-materials${qs ? `?${qs}` : ""}`;
+      },
+      providesTags: ["LectureMaterials"],
+    }),
+    createLectureMaterial: build.mutation<Envelope<Record<string, unknown>>, Record<string, unknown>>({
+      query: (body) => ({ url: "/lecture-materials", method: "POST", body }),
+      invalidatesTags: ["LectureMaterials"],
+    }),
+    updateLectureMaterial: build.mutation<Envelope<Record<string, unknown>>, { id: string } & Record<string, unknown>>({
+      query: ({ id, ...body }) => ({ url: `/lecture-materials/${id}`, method: "PATCH", body }),
+      invalidatesTags: ["LectureMaterials"],
+    }),
+    deleteLectureMaterial: build.mutation<Envelope<Record<string, unknown>>, string>({
+      query: (id) => ({ url: `/lecture-materials/${id}`, method: "DELETE" }),
+      invalidatesTags: ["LectureMaterials"],
+    }),
+    // Training
+    getTrainings: build.query<Envelope<Record<string, unknown>[]>, { status?: string } | void>({
+      query: (arg) => (arg?.status ? `/trainings?status=${arg.status}` : "/trainings"),
+      providesTags: ["Trainings"],
+    }),
+    createTraining: build.mutation<Envelope<Record<string, unknown>>, Record<string, unknown>>({
+      query: (body) => ({ url: "/trainings", method: "POST", body }),
+      invalidatesTags: ["Trainings"],
+    }),
+    updateTraining: build.mutation<Envelope<Record<string, unknown>>, { id: string } & Record<string, unknown>>({
+      query: ({ id, ...body }) => ({ url: `/trainings/${id}`, method: "PATCH", body }),
+      invalidatesTags: ["Trainings"],
+    }),
+    deleteTraining: build.mutation<Envelope<Record<string, unknown>>, string>({
+      query: (id) => ({ url: `/trainings/${id}`, method: "DELETE" }),
+      invalidatesTags: ["Trainings"],
+    }),
+    updateTrainingAttendance: build.mutation<Envelope<Record<string, unknown>>, { id: string; participants: Array<Record<string, unknown>> }>({
+      query: ({ id, participants }) => ({ url: `/trainings/${id}/attendance`, method: "PATCH", body: { participants } }),
+      invalidatesTags: ["Trainings"],
+    }),
+    // Time Attendance
+    getTimeAttendanceLogs: build.query<
+      Envelope<Record<string, unknown>[]>,
+      { date?: string; deviceId?: string; staffId?: string } | void
+    >({
+      query: (arg) => {
+        const p = new URLSearchParams();
+        if (arg?.date) p.set("date", arg.date);
+        if (arg?.deviceId) p.set("deviceId", arg.deviceId);
+        if (arg?.staffId) p.set("staffId", arg.staffId);
+        const qs = p.toString();
+        return `/time-attendance/logs${qs ? `?${qs}` : ""}`;
+      },
+      providesTags: ["TimeAttendance"],
+    }),
+    getTimeAttendanceMappings: build.query<Envelope<Record<string, unknown>[]>, { deviceId?: string } | void>({
+      query: (arg) => (arg?.deviceId ? `/time-attendance/mappings?deviceId=${arg.deviceId}` : "/time-attendance/mappings"),
+      providesTags: ["TimeAttendance"],
+    }),
+    upsertTimeAttendanceMapping: build.mutation<Envelope<Record<string, unknown>>, Record<string, unknown>>({
+      query: (body) => ({ url: "/time-attendance/mappings", method: "POST", body }),
+      invalidatesTags: ["TimeAttendance"],
+    }),
+    deleteTimeAttendanceMapping: build.mutation<Envelope<Record<string, unknown>>, string>({
+      query: (id) => ({ url: `/time-attendance/mappings/${id}`, method: "DELETE" }),
+      invalidatesTags: ["TimeAttendance"],
+    }),
   }),
 });
 
@@ -404,4 +675,46 @@ export const {
   useUpdateCertificateTemplateMutation,
   useGetCertificatesQuery,
   useIssueCertificateMutation,
+  // Routines
+  useGetRoutinesQuery,
+  useCreateRoutineSlotMutation,
+  useDeleteRoutineSlotMutation,
+  // Result Enhancements
+  useGetPassListQuery,
+  useGetFailListQuery,
+  useGetResultStatsQuery,
+  // Academic Calendar
+  useGetCalendarEventsQuery,
+  useCreateCalendarEventMutation,
+  useUpdateCalendarEventMutation,
+  useDeleteCalendarEventMutation,
+  // Admission Exams
+  useGetAdmissionExamsQuery,
+  useCreateAdmissionExamMutation,
+  useUpdateAdmissionExamMutation,
+  useDeleteAdmissionExamMutation,
+  usePublishAdmissionExamMutation,
+  useGetAdmissionResultsQuery,
+  useUpsertAdmissionResultMutation,
+  useBulkSaveAdmissionResultsMutation,
+  // Seat Plans
+  useGetSeatPlanQuery,
+  useGenerateSeatPlanMutation,
+  useDeleteSeatPlanMutation,
+  // Lecture Materials
+  useGetLectureMaterialsQuery,
+  useCreateLectureMaterialMutation,
+  useUpdateLectureMaterialMutation,
+  useDeleteLectureMaterialMutation,
+  // Training
+  useGetTrainingsQuery,
+  useCreateTrainingMutation,
+  useUpdateTrainingMutation,
+  useDeleteTrainingMutation,
+  useUpdateTrainingAttendanceMutation,
+  // Time Attendance
+  useGetTimeAttendanceLogsQuery,
+  useGetTimeAttendanceMappingsQuery,
+  useUpsertTimeAttendanceMappingMutation,
+  useDeleteTimeAttendanceMappingMutation,
 } = schoolApi;

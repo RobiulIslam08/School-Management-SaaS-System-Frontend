@@ -29,6 +29,14 @@ export interface NavItem {
     | "hostel"
     | "idCards"
     | "certificates"
+    | "calendar"
+    | "seatPlan"
+    | "examAdmit"
+    | "admissionExam"
+    | "materials"
+    | "training"
+    | "timeAttendance"
+    | "displayBoard"
     | "guardian"
   | "teacherPortal"
   | "settings"
@@ -81,6 +89,9 @@ export const NAV_GROUPS: NavGroup[] = [
         feature: "certificates",
         permission: "certificates:view",
       },
+      { href: "/calendar", labelKey: "calendar", feature: "academics", permission: "academics:view" },
+      { href: "/students/seat-plan", labelKey: "seatPlan", feature: "exams", permission: "exams:view" },
+      { href: "/students/exam-admit", labelKey: "examAdmit", feature: "exams", permission: "exams:view" },
     ],
   },
   {
@@ -112,6 +123,11 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     titleKey: "operations",
     items: [
+      { href: "/admissions/exam", labelKey: "admissionExam", feature: "admission", permission: "admission:view" },
+      { href: "/materials", labelKey: "materials", feature: "teachers", permission: "teachers:view" },
+      { href: "/training", labelKey: "training", feature: "teachers", permission: "teachers:view" },
+      { href: "/time-attendance", labelKey: "timeAttendance", feature: "attendance", permission: "attendance:view" },
+      { href: "/display-board", labelKey: "displayBoard" },
       { href: "/talent", labelKey: "talent", feature: "talent", permission: "talent:view" },
       { href: "/reports/areas", labelKey: "reports", feature: "reports", permission: "reports:view" },
       { href: "/library", labelKey: "library", feature: "library", permission: "library:view" },
