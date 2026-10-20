@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state";
 import { StatCard } from "@/components/stat-card";
 import { Button, Card } from "@/components/ui";
-import { useGetSettingsQuery, useTeacherPortalQuery } from "@/lib/api/schoolApi";
+import { useMeQuery, useTeacherPortalQuery } from "@/lib/api/schoolApi";
 import { useI18n } from "@/lib/i18n";
 
 type SubjectRow = { _id?: string; name?: string; code?: string; classId?: { name?: string } };
@@ -35,12 +35,12 @@ type NoticeRow = {
 export default function TeacherPortalPage() {
   const { t, locale } = useI18n();
   const { data, isLoading, isError, refetch } = useTeacherPortalQuery();
-  const { data: settingsData } = useGetSettingsQuery();
+  const { data: session } = useMeQuery();
   const [viewNotice, setViewNotice] = useState<NoticeRow | null>(null);
   const notices = (data?.data?.notices ?? []) as NoticeRow[];
   const teacher = (data?.data?.teacher ?? null) as TeacherPayload | null;
   const subjects = teacher?.subjects ?? [];
-  const settings = settingsData?.data;
+  const settings = session?.data.settings;
 
   if (isLoading) return <TableSkeleton />;
   if (isError) return <QueryError onRetry={refetch} />;

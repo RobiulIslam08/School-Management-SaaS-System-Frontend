@@ -11,7 +11,6 @@ import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
 import { Button, Card, Field, Select } from "@/components/ui";
 import {
-  useGetSettingsQuery,
   useGetStudentsQuery,
   useGuardianPortalQuery,
   useMeQuery,
@@ -33,8 +32,8 @@ type NoticeRow = {
 export default function GuardianPortalPage() {
   const { t, locale } = useI18n();
   const { data: session } = useMeQuery();
-  const { data: settingsData } = useGetSettingsQuery();
   const role = session?.data.user.role;
+  const settings = session?.data.settings;
   const { data: students } = useGetStudentsQuery(undefined, { skip: role === "guardian" || !role });
   const [studentId, setStudentId] = useState("");
   const [viewNotice, setViewNotice] = useState<NoticeRow | null>(null);
@@ -50,7 +49,6 @@ export default function GuardianPortalPage() {
   const attendance = (payload.attendance ?? []) as AttendanceRow[];
   const notices = (payload.notices ?? []) as NoticeRow[];
   const present = attendance.filter((row) => row.status === "present").length;
-  const settings = settingsData?.data;
 
   function markLabel(status?: string) {
     if (status === "absent") return t.common.absent;

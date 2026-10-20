@@ -15,7 +15,7 @@ import {
   useCreateNoticeMutation,
   useGetClassesQuery,
   useGetNoticesQuery,
-  useGetSettingsQuery,
+  useMeQuery,
 } from "@/lib/api/schoolApi";
 import { useI18n } from "@/lib/i18n";
 
@@ -72,7 +72,7 @@ export default function NoticesPage() {
     q: q || undefined,
   });
   const { data: classes } = useGetClassesQuery();
-  const { data: settingsData } = useGetSettingsQuery();
+  const { data: session } = useMeQuery();
   const [createNotice] = useCreateNoticeMutation();
   const [updateNotice] = useUpdateNoticeMutation();
   const [deleteNotice] = useDeleteNoticeMutation();
@@ -85,7 +85,7 @@ export default function NoticesPage() {
 
   const rows = (data?.data ?? []) as NoticeRow[];
   const classList = (classes?.data ?? []) as Array<{ _id: string; name: string }>;
-  const settings = settingsData?.data;
+  const settings = session?.data.settings;
   const published = rows.filter((row) => row.isPublished !== false).length;
 
   function audienceLabel(value?: string) {

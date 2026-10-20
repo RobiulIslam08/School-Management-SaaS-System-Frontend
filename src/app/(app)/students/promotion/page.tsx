@@ -20,8 +20,8 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button, Field, Input, Select } from "@/components/ui";
 import {
   useGetClassesQuery,
-  useGetSettingsQuery,
   useGetStudentsQuery,
+  useMeQuery,
   usePromoteStudentsMutation,
   useRevertStudentsPromotionMutation,
   useTransferOutStudentsMutation,
@@ -62,8 +62,8 @@ type StudentItem = {
 function StudentPromotionInner() {
   const { t, locale } = useI18n();
   const bn = locale === "bn";
-  const { data: settingsData } = useGetSettingsQuery();
-  const schoolYear = settingsData?.data?.academicYear || String(new Date().getFullYear());
+  const { data: session } = useMeQuery();
+  const schoolYear = session?.data.settings?.academicYear || String(new Date().getFullYear());
 
   // Source filters
   const [sourceYear, setSourceYear] = useState<string>("");
