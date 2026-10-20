@@ -31,7 +31,7 @@ export function Dialog({
         )}
       >
         <div className="mb-4 flex items-start justify-between gap-3">
-          <h2 className="text-lg font-medium">{title}</h2>
+          <h2 className="text-lg font-medium text-foreground">{title}</h2>
           <Button type="button" variant="ghost" className="h-9 px-2" onClick={onClose}>
             ×
           </Button>
@@ -63,7 +63,7 @@ export function Sheet({
         className="absolute inset-y-0 right-0 flex w-full max-w-xl flex-col overflow-y-auto border-l border-border bg-white p-5 shadow-md"
       >
         <div className="mb-4 flex items-start justify-between gap-3">
-          <h2 className="text-lg font-medium">{title}</h2>
+          <h2 className="text-lg font-medium text-foreground">{title}</h2>
           <Button type="button" variant="ghost" className="h-9 px-2" onClick={onClose}>
             ×
           </Button>

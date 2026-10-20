@@ -150,8 +150,22 @@ export const schoolApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/students", method: "POST", body }),
       invalidatesTags: ["Students", "Dashboard"],
     }),
-    promoteStudents: build.mutation<Envelope<unknown>, { ids: string[]; targetClassId: string; targetSection: string }>({
+    promoteStudents: build.mutation<
+      Envelope<unknown>,
+      { ids: string[]; targetClassId: string; targetSection: string; targetAcademicYear?: string }
+    >({
       query: (body) => ({ url: "/students/promote", method: "POST", body }),
+      invalidatesTags: ["Students"],
+    }),
+    revertStudentsPromotion: build.mutation<Envelope<{ revertedCount: number }>, { ids: string[] }>({
+      query: (body) => ({ url: "/students/revert-promotion", method: "POST", body }),
+      invalidatesTags: ["Students"],
+    }),
+    transferOutStudents: build.mutation<
+      Envelope<{ modifiedCount: number }>,
+      { ids: string[]; removeFromClass?: boolean; reason?: string }
+    >({
+      query: (body) => ({ url: "/students/transfer-out", method: "POST", body }),
       invalidatesTags: ["Students"],
     }),
     promoteAllStudents: build.mutation<
@@ -624,6 +638,8 @@ export const {
   useGetStudentQuery,
   useCreateStudentMutation,
   usePromoteStudentsMutation,
+  useRevertStudentsPromotionMutation,
+  useTransferOutStudentsMutation,
   usePromoteAllStudentsMutation,
   useGetTeachersQuery,
   useCreateTeacherMutation,

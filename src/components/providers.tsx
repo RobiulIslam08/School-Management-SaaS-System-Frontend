@@ -1,10 +1,13 @@
 "use client";
 
+import { setupListeners } from "@reduxjs/toolkit/query";
 import { useEffect, useState, type ReactNode } from "react";
 import { Provider } from "react-redux";
 import { Toaster } from "sonner";
 import { LanguageProvider } from "@/lib/i18n";
 import { store } from "@/lib/store";
+
+setupListeners(store.dispatch);
 
 function ClientToaster() {
   const [ready, setReady] = useState(false);

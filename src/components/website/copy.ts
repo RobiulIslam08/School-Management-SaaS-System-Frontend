@@ -48,8 +48,10 @@ export const BOARDS = [
   { key: "committee", bn: "স্কুল কমিটি", en: "School committee" },
   { key: "governing", bn: "পরিচালনা পর্ষদ", en: "Governing body" },
   { key: "council", bn: "একাডেমিক কাউন্সিল", en: "Academic council" },
-  { key: "syndicate", bn: "সিন্ডিকেট", en: "Syndicate" },
   { key: "pta", bn: "অভিভাবক কমিটি", en: "Parent committee" },
+  { key: "former_principal", bn: "সাবেক অধ্যক্ষ", en: "Former principal" },
+  { key: "former_president", bn: "সাবেক সভাপতি", en: "Former president" },
+  { key: "donor", bn: "দাতা সদস্য", en: "Donor member" },
 ] as const;
 
 export const PAGE_GROUPS = [
@@ -81,6 +83,11 @@ const CONFIG_KEYS = [
   "principalPhotoUrl",
   "principalQuoteBn",
   "principalQuoteEn",
+  "presidentName",
+  "presidentDesignation",
+  "presidentPhotoUrl",
+  "presidentQuoteBn",
+  "presidentQuoteEn",
   "homeIntroBn",
   "homeIntroEn",
   "tasks",
@@ -195,6 +202,7 @@ export function configPayload(form: Record<string, unknown>): Record<string, unk
 const OFFICE_BOARDS = new Set(["principal", "vice", "admission", "accounts", "librarian", "exam", "clerk"]);
 
 export function personPath(board: string): string {
+  if (board === "former_principal" || board === "former_president" || board === "donor") return "/about/honorable";
   return OFFICE_BOARDS.has(board) ? `/office/${board}` : `/authorities/${board}`;
 }
 

@@ -44,6 +44,7 @@ export const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, Fetch
 
 export const baseApi = createApi({
   reducerPath: "api",
+  keepUnusedDataFor: 300,
   tagTypes: [
     "Session",
     "Settings",

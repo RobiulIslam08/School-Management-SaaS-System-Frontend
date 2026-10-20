@@ -109,27 +109,41 @@ export function WebsiteWorkspace() {
     setFormState(next);
   }
 
+  async function bumpPublicCache() {
+    try {
+      await fetch("/api/revalidate-public", { method: "POST" });
+    } catch {
+      /* optional; 60s TTL still applies */
+    }
+  }
+
   async function onSaveConfig() {
     if (!isVideoLink(text(form.heroVideoUrl))) {
       toast.error(t.website.videoBad);
       return;
     }
     const result = await saveConfig(configPayload(form));
-    if (toastApiResult(result, t.common.save, t.common.loadError)) setConfigDirty(false);
+    if (toastApiResult(result, t.common.save, t.common.loadError)) {
+      setConfigDirty(false);
+      void bumpPublicCache();
+    }
   }
 
   async function onSavePage() {
     if (!pageForm) return;
     const result = await savePage({ id: pageForm._id, ...pageForm, blocks: cleanBlocks(pageForm) });
-    if (toastApiResult(result, t.common.save, t.common.loadError)) setPageDirty(false);
+    if (toastApiResult(result, t.common.save, t.common.loadError)) {
+      setPageDirty(false);
+      void bumpPublicCache();
+    }
   }
 
   function askDelete(run: () => Promise<unknown>) {
     setPending(() => run);
   }
 
-  if (isLoading) return <TableSkeleton />;
-  if (isError || !bundle) return <QueryError onRetry={refetch} />;
+  if (isLoading && !bundle) return <TableSkeleton />;
+  if (!bundle) return <QueryError onRetry={refetch} />;
 
   const labels: Record<string, string> = {
     ready: t.website.ready,
@@ -158,6 +172,14 @@ export function WebsiteWorkspace() {
           ) : null
         }
       />
+      {isError ? (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-950">
+          <span>{t.common.loadError}</span>
+          <button type="button" className="font-medium underline" onClick={() => refetch()}>
+            {t.common.retry}
+          </button>
+        </div>
+      ) : null}
       <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
         <nav className="flex gap-1 overflow-x-auto lg:flex-col" aria-label={t.website.title}>
           {SECTIONS.map((item) => (
@@ -208,7 +230,9 @@ export function WebsiteWorkspace() {
           onSaveConfig={onSaveConfig}
           onSavePerson={async (body) => {
             const result = await savePerson(body);
-            return toastApiResult(result, t.common.save, t.common.loadError);
+            const ok = toastApiResult(result, t.common.save, t.common.loadError);
+            if (ok) void bumpPublicCache();
+            return ok;
           }}
           onDelete={(id) => askDelete(() => deletePerson(id))}
         />
@@ -219,15 +243,21 @@ export function WebsiteWorkspace() {
           savingAlbum={savingAlbum}
           onAlbum={async (body) => {
             const result = await saveAlbum(body);
-            return toastApiResult(result, t.common.save, t.common.loadError);
+            const ok = toastApiResult(result, t.common.save, t.common.loadError);
+            if (ok) void bumpPublicCache();
+            return ok;
           }}
           onMedia={async (body) => {
             const result = await saveMedia(body);
-            return toastApiResult(result, t.common.save, t.common.loadError);
+            const ok = toastApiResult(result, t.common.save, t.common.loadError);
+            if (ok) void bumpPublicCache();
+            return ok;
           }}
           onFile={async (body) => {
             const result = await saveFile(body);
-            return toastApiResult(result, t.common.save, t.common.loadError);
+            const ok = toastApiResult(result, t.common.save, t.common.loadError);
+            if (ok) void bumpPublicCache();
+            return ok;
           }}
           onDeleteAlbum={(id) => askDelete(() => deleteAlbum(id))}
           onDeleteMedia={(id) => askDelete(() => deleteMedia(id))}
@@ -240,7 +270,9 @@ export function WebsiteWorkspace() {
           saving={savingPost}
           onSave={async (body) => {
             const result = await savePost(body);
-            return toastApiResult(result, t.common.save, t.common.loadError);
+            const ok = toastApiResult(result, t.common.save, t.common.loadError);
+            if (ok) void bumpPublicCache();
+            return ok;
           }}
           onDelete={(id) => askDelete(() => deletePost(id))}
         />
@@ -272,7 +304,9 @@ export function WebsiteWorkspace() {
           setDeleting(true);
           const result = await pending();
           setDeleting(false);
-          toastApiResult(result as Parameters<typeof toastApiResult>[0], t.common.delete, t.common.loadError);
+          if (toastApiResult(result as Parameters<typeof toastApiResult>[0], t.common.delete, t.common.loadError)) {
+            void bumpPublicCache();
+          }
           setPending(null);
         }}
       />

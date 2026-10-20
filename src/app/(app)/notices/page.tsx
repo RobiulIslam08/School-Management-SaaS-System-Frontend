@@ -6,7 +6,7 @@ import { toastApiResult } from "@/lib/toast-api";
 import { ConfirmDialog, Dialog } from "@/components/dialog";
 import { NoticeDocument } from "@/components/notice-document";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state";
+import { EmptyState, QueryError, SoftFetchBar, TableSkeleton } from "@/components/query-state";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
 import { Button, Field, Input, Select, Textarea } from "@/components/ui";
@@ -65,7 +65,7 @@ export default function NoticesPage() {
   const [q, setQ] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
-  const { data, isLoading, isError, refetch } = useGetNoticesQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useGetNoticesQuery({
     status: status || undefined,
     audience: audienceFilter || undefined,
     category: categoryFilter || undefined,
@@ -235,7 +235,8 @@ export default function NoticesPage() {
           </Field>
         </div>
 
-        {isLoading ? <TableSkeleton /> : null}
+        {isLoading && !data ? <TableSkeleton /> : null}
+        <SoftFetchBar active={isFetching && Boolean(data)} />
         {isError ? <QueryError onRetry={refetch} /> : null}
         {!isLoading && !rows.length ? <EmptyState title={t.notices.empty} hint={t.notices.emptyHint} /> : null}
 

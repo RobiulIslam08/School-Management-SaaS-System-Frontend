@@ -5,7 +5,7 @@ import { toastApiResult } from "@/lib/toast-api";
 import { DataTable, FormPanel } from "@/components/data-table";
 import { ConfirmDialog } from "@/components/dialog";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state";
+import { EmptyState, QueryError, SoftFetchBar, TableSkeleton } from "@/components/query-state";
 import { Button, Field, Input } from "@/components/ui";
 import { ClassWorkspace } from "@/features/classes/class-workspace";
 import { useArchiveClassMutation, useDeleteClassMutation, useUpdateClassMutation } from "@/lib/api/classApi";
@@ -25,7 +25,7 @@ type ClassRow = {
 
 export default function ClassesPage() {
   const { t } = useI18n();
-  const { data, isLoading, isError, refetch } = useGetClassesQuery();
+  const { data, isLoading, isFetching, isError, refetch } = useGetClassesQuery();
   const [createClass] = useCreateClassMutation();
   const [updateClass] = useUpdateClassMutation();
   const [archiveClass] = useArchiveClassMutation();
@@ -72,7 +72,8 @@ export default function ClassesPage() {
         <Field label={t.classes.sections}><Input value={form.sections} onChange={(e) => setForm({ ...form, sections: e.target.value })} /></Field>
         <Button type="submit">{t.common.add}</Button>
       </FormPanel>
-      {isLoading ? <TableSkeleton /> : null}
+      {isLoading && !data ? <TableSkeleton /> : null}
+      <SoftFetchBar active={isFetching && Boolean(data)} />
       {isError ? <QueryError onRetry={refetch} /> : null}
       {!isLoading && !visible.length ? <EmptyState title={t.classes.empty} hint={t.classes.emptyHint} /> : null}
       <DataTable

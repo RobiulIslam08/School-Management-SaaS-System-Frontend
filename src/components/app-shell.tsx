@@ -4,8 +4,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, Search, LogOut, X } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
+import { useDispatch } from "react-redux";
 import { useLogoutMutation, useMeQuery } from "@/lib/api/schoolApi";
 import { useI18n } from "@/lib/i18n";
+import { prefetchNav } from "@/lib/prefetch-nav";
+import type { AppDispatch } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { LanguageSwitch } from "./language-switch";
 import { canAccess, NAV_GROUPS } from "./nav";
@@ -14,6 +17,7 @@ import { Button, Input } from "./ui";
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
   const { t } = useI18n();
   const { data, isLoading, isError, refetch } = useMeQuery();
   const [logout] = useLogoutMutation();
@@ -23,7 +27,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const features = session?.features ?? {};
   const permissions = session?.user?.permissions ?? [];
   const role = session?.user?.role ?? "";
-  const authed = Boolean(session) && !isError;
+  const authed = Boolean(session);
   const primary = session?.settings?.theme?.primary ?? "#14532d";
 
   const groups = useMemo(
@@ -68,6 +72,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       ) : null}
 
       <div className={cn("flex min-h-screen", (!authed || isLoading) && "hidden")}>
+        {authed && isError ? (
+          <div className="no-print absolute inset-x-0 top-16 z-20 flex items-center justify-center gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-950 md:left-72">
+            <span>{t.common.loadError}</span>
+            <Button type="button" variant="secondary" className="h-8" onClick={() => refetch()}>
+              {t.common.retry}
+            </Button>
+          </div>
+        ) : null}
         {open ? (
           <button
             type="button"
@@ -110,6 +122,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       key={item.href}
                       href={item.href}
                       onClick={() => setOpen(false)}
+                      onPointerEnter={() => prefetchNav(dispatch, item.href)}
                       className={cn(
                         "flex min-h-11 items-center rounded-md px-3 text-sm hover:bg-muted",
                         pathname === item.href && "bg-primary/10 font-medium text-primary"

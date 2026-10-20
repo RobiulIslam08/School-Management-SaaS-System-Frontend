@@ -32,7 +32,9 @@ export function PeopleTab({
   const [deskKey, setDeskKey] = useState<string>(BOARDS[0].key);
   const [person, setPerson] = useState(EMPTY);
   const desk = desks.find((item) => item.key === deskKey) ?? desks[0];
-  const writing = ["principal", "vice", "committee"].includes(deskKey) ? t.website.message : t.website.body;
+  const writing = ["principal", "vice", "committee", "governing", "former_principal", "former_president"].includes(deskKey)
+    ? t.website.message
+    : t.website.body;
   const people = bundle.people.filter((item) => text(item.board) === deskKey);
 
   function patchDesk(patch: Partial<DeskItem>) {
@@ -76,8 +78,8 @@ export function PeopleTab({
         <Field label={t.common.name}><Input value={person.name} onChange={(event) => setPerson({ ...person, name: event.target.value })} /></Field>
         <Field label={t.website.designation}><Input value={person.designation} onChange={(event) => setPerson({ ...person, designation: event.target.value })} /></Field>
         <Field label={t.common.phone}><Input value={person.phone} onChange={(event) => setPerson({ ...person, phone: event.target.value })} /></Field>
-        <Field label={`${writing} · বাংলা`}><Textarea maxLength={2000} value={person.bioBn} onChange={(event) => setPerson({ ...person, bioBn: event.target.value })} /></Field>
-        <Field label={`${writing} · English`}><Textarea maxLength={2000} value={person.bioEn} onChange={(event) => setPerson({ ...person, bioEn: event.target.value })} /></Field>
+        <Field label={`${writing} · বাংলা`}><Textarea rows={6} maxLength={4000} value={person.bioBn} onChange={(event) => setPerson({ ...person, bioBn: event.target.value })} /></Field>
+        <Field label={`${writing} · English`}><Textarea rows={6} maxLength={4000} value={person.bioEn} onChange={(event) => setPerson({ ...person, bioEn: event.target.value })} /></Field>
         <PhotoField label={t.website.photo} value={person.photoUrl} onChange={(url) => setPerson({ ...person, photoUrl: url })} />
         <div className="flex gap-2">
           <Button

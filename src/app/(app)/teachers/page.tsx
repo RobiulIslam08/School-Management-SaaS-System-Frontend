@@ -7,7 +7,7 @@ import { toastApiResult } from "@/lib/toast-api";
 import { DataTable } from "@/components/data-table";
 import { ConfirmDialog, Dialog, Sheet } from "@/components/dialog";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state";
+import { EmptyState, QueryError, SoftFetchBar, TableSkeleton } from "@/components/query-state";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
 import { Button, Field, Input, Textarea } from "@/components/ui";
@@ -212,7 +212,7 @@ const emptyForm = {
 
 export default function TeachersPage() {
   const { t, locale } = useI18n();
-  const { data, isLoading, isError, refetch } = useGetTeachersQuery();
+  const { data, isLoading, isFetching, isError, refetch } = useGetTeachersQuery();
   const { data: subjectsData } = useGetSubjectsQuery();
   const [createTeacher] = useCreateTeacherMutation();
   const [updateTeacher, { isLoading: saving }] = useUpdateTeacherMutation();
@@ -386,11 +386,20 @@ export default function TeachersPage() {
         }
       />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <StatCard label={t.teachers.title} value={rows.length} icon={<GraduationCap size={18} />} />
-        <StatCard label={t.common.active} value={active} tone="success" />
-        <StatCard label={t.teachers.basic} value={payroll} icon={<Wallet size={18} />} />
+        <StatCard
+          label={t.teachers.title}
+          value={isLoading && !data ? "—" : rows.length}
+          icon={<GraduationCap size={18} />}
+        />
+        <StatCard label={t.common.active} value={isLoading && !data ? "—" : active} tone="success" />
+        <StatCard
+          label={t.teachers.basic}
+          value={isLoading && !data ? "—" : payroll}
+          icon={<Wallet size={18} />}
+        />
       </div>
-      {isLoading ? <TableSkeleton /> : null}
+      {isLoading && !data ? <TableSkeleton /> : null}
+      <SoftFetchBar active={isFetching && Boolean(data)} />
       {isError ? <QueryError onRetry={refetch} /> : null}
       {!isLoading && !rows.length ? <EmptyState title={t.teachers.empty} hint={t.teachers.emptyHint} /> : null}
       <DataTable

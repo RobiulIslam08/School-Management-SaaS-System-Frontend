@@ -6,7 +6,7 @@ import { toastApiResult } from "@/lib/toast-api";
 import { DataTable, FormPanel } from "@/components/data-table";
 import { ConfirmDialog, Dialog } from "@/components/dialog";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state";
+import { EmptyState, QueryError, SoftFetchBar, TableSkeleton } from "@/components/query-state";
 import { Button, Field, Input, Select } from "@/components/ui";
 import { WorkspaceTabs } from "@/components/workspace-tabs";
 import {
@@ -81,7 +81,7 @@ export default function ExamsPage() {
   const settingsYear = session?.data.settings?.academicYear ?? "2026";
   const [tab, setTab] = useState("list");
   const [yearFilter, setYearFilter] = useState(settingsYear);
-  const { data, isLoading, isError, refetch } = useGetExamsQuery();
+  const { data, isLoading, isFetching, isError, refetch } = useGetExamsQuery();
   const { data: rules } = useGetRulesQuery();
   const [createExam] = useCreateExamMutation();
   const [updateExam] = useUpdateExamMutation();
@@ -100,7 +100,10 @@ export default function ExamsPage() {
   const [edit, setEdit] = useState<ExamRow | null>(null);
   const [removeId, setRemoveId] = useState<string | null>(null);
   const [previewStudentId, setPreviewStudentId] = useState("");
-  const { data: students } = useGetStudentsQuery({ status: "active" });
+  const { data: students } = useGetStudentsQuery(
+    { status: "active" },
+    { skip: tab !== "formula" }
+  );
   const { data: finalData, isFetching: finalLoading } = useGetFinalGradeQuery(
     previewStudentId && yearFilter
       ? { studentId: previewStudentId, academicYear: yearFilter }
@@ -234,7 +237,8 @@ export default function ExamsPage() {
             </Field>
             <Button type="submit">{t.exams.addExam}</Button>
           </FormPanel>
-          {isLoading ? <TableSkeleton /> : null}
+          {isLoading && !data ? <TableSkeleton /> : null}
+          <SoftFetchBar active={isFetching && Boolean(data)} />
           {isError ? <QueryError onRetry={refetch} /> : null}
           {!isLoading && !exams.length ? <EmptyState title={t.exams.empty} /> : null}
           <DataTable

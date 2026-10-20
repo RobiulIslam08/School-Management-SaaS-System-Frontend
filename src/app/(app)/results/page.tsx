@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { toastApiResult } from "@/lib/toast-api";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state";
+import { EmptyState, QueryError, SoftFetchBar, TableSkeleton } from "@/components/query-state";
 import { Badge, Button, Field, Input, Select } from "@/components/ui";
 import { WorkspaceTabs } from "@/components/workspace-tabs";
 import {
@@ -119,13 +119,15 @@ export default function ResultsPage() {
   const [focusStudentId, setFocusStudentId] = useState<string | null>(null);
   const [studentIdQuery, setStudentIdQuery] = useState("");
 
-  const { data, isLoading, isError, refetch } = useGetResultsQuery(
-    examTypeId ? { examTypeId, classId, section } : undefined
+  const { data, isLoading, isFetching, isError, refetch } = useGetResultsQuery(
+    { examTypeId, classId, section },
+    { skip: !examTypeId || !classId }
   );
-  const { data: students, isLoading: studentsLoading } = useGetStudentsQuery(
-    classId ? { classId, section: section || undefined, status: "active" } : undefined
+  const { data: students, isLoading: studentsLoading, isFetching: studentsFetching } = useGetStudentsQuery(
+    { classId, section: section || undefined, status: "active" },
+    { skip: !classId }
   );
-  const { data: subjects } = useGetSubjectsQuery(classId || undefined);
+  const { data: subjects } = useGetSubjectsQuery(classId, { skip: !classId });
   const [saveResult] = useSaveResultMutation();
   const [merit, { isLoading: meriting }] = useRecomputeMeritMutation();
 
@@ -389,7 +391,15 @@ export default function ResultsPage() {
         onChange={setTab}
       />
 
-      {isLoading || studentsLoading ? <TableSkeleton /> : null}
+      {classId && examTypeId && ((isLoading && !data) || (studentsLoading && !students)) ? (
+        <TableSkeleton />
+      ) : null}
+      <SoftFetchBar
+        active={
+          Boolean(classId && examTypeId) &&
+          ((isFetching && Boolean(data)) || (studentsFetching && Boolean(students)))
+        }
+      />
       {isError ? <QueryError onRetry={refetch} /> : null}
 
       {tab === "entry" ? (
@@ -645,7 +655,9 @@ export default function ResultsPage() {
 
       <div className="mt-8">
         <h2 className="mb-3 text-sm font-semibold">{t.results.merit}</h2>
-        {!shownResults.length ? (
+        {!classId || !examTypeId ? (
+          <EmptyState title={t.results.merit} hint={t.results.gridHint} />
+        ) : !shownResults.length ? (
           <EmptyState title={t.results.merit} hint={t.results.gridHint} />
         ) : (
           <DataTable

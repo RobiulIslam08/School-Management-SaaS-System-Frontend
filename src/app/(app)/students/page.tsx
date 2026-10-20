@@ -9,7 +9,7 @@ import { DataTable } from "@/components/data-table";
 import { Dialog } from "@/components/dialog";
 import { FilterBar } from "@/components/filter-bar";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state";
+import { EmptyState, QueryError, SoftFetchBar, TableSkeleton } from "@/components/query-state";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
 import { Button, Field, Input, Select } from "@/components/ui";
@@ -26,10 +26,18 @@ type StudentRow = {
   studentId: string;
   photoUrl?: string;
   phone?: string;
+  dob?: string;
   section?: string;
   status?: string;
   classId?: { name?: string };
 };
+
+function formatDob(value: string | undefined, locale: string) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString(locale === "bn" ? "bn-BD" : "en-GB");
+}
 
 function statusLabel(t: ReturnType<typeof useI18n>["t"], status?: string) {
   if (status === "pending") return t.common.pending;
@@ -39,7 +47,7 @@ function statusLabel(t: ReturnType<typeof useI18n>["t"], status?: string) {
 }
 
 function StudentsInner() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const params = useSearchParams();
   const classId = params.get("classId") ?? "";
@@ -47,7 +55,7 @@ function StudentsInner() {
   const status = params.get("status") ?? "";
   const q = params.get("q") ?? "";
   const [idText, setIdText] = useState(q);
-  const { data, isLoading, isError, refetch } = useGetStudentsQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useGetStudentsQuery({
     q: q || undefined,
     classId: classId || undefined,
     section: section || undefined,
@@ -113,6 +121,12 @@ function StudentsInner() {
         subtitle={t.students.subtitle}
         actions={
           <>
+            <Link href="/students/promotion">
+              <Button variant="secondary" className="flex items-center gap-1.5">
+                <GraduationCap size={16} />
+                <span>{locale === "bn" ? "শ্রেণি প্রমোশন ও ছাড়পত্র" : "Promotion & Transfer"}</span>
+              </Button>
+            </Link>
             <Button type="button" variant="secondary" disabled={!selected.length} onClick={() => setPromoteOpen(true)}>
               {t.students.promote} ({selected.length})
             </Button>
@@ -123,9 +137,26 @@ function StudentsInner() {
         }
       />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <StatCard href="/students" label={t.students.title} value={counts.total} icon={<Users size={18} />} />
-        <StatCard href="/students?status=active" label={t.common.active} value={counts.active} icon={<GraduationCap size={18} />} tone="success" />
-        <StatCard href="/students/admit" label={t.common.pending} value={counts.pending} icon={<UserPlus size={18} />} tone="warning" />
+        <StatCard
+          href="/students"
+          label={t.students.title}
+          value={isLoading && !data ? "—" : counts.total}
+          icon={<Users size={18} />}
+        />
+        <StatCard
+          href="/students?status=active"
+          label={t.common.active}
+          value={isLoading && !data ? "—" : counts.active}
+          icon={<GraduationCap size={18} />}
+          tone="success"
+        />
+        <StatCard
+          href="/students/admit"
+          label={t.common.pending}
+          value={isLoading && !data ? "—" : counts.pending}
+          icon={<UserPlus size={18} />}
+          tone="warning"
+        />
       </div>
       <FilterBar>
         <Field label={t.students.id}>
@@ -164,7 +195,8 @@ function StudentsInner() {
           </Select>
         </Field>
       </FilterBar>
-      {isLoading ? <TableSkeleton /> : null}
+      {isLoading && !data ? <TableSkeleton /> : null}
+      <SoftFetchBar active={isFetching && Boolean(data)} />
       {isError ? <QueryError onRetry={refetch} /> : null}
       {!isLoading && !rows.length ? (
         <EmptyState
@@ -226,6 +258,11 @@ function StudentsInner() {
           },
           { header: t.common.phone, cell: (row) => row.phone || "—" },
           {
+            header: t.students.dob,
+            cell: (row) => formatDob(row.dob, locale),
+            sortValue: (row) => (row.dob ? new Date(row.dob).getTime() : 0),
+          },
+          {
             header: t.common.status,
             cell: (row) => <StatusBadge label={statusLabel(t, row.status)} tone={studentStatusTone(row.status)} />,
             sortValue: (row) => row.status ?? "active",
@@ -272,6 +309,11 @@ function StudentsInner() {
                 {row.classId?.name ?? "—"} {row.section ?? ""}
               </p>
               {row.phone ? <p className="text-xs text-muted-foreground">{row.phone}</p> : null}
+              {row.dob ? (
+                <p className="text-xs text-muted-foreground">
+                  {t.students.dob}: {formatDob(row.dob, locale)}
+                </p>
+              ) : null}
             </div>
           </div>
         )}

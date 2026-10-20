@@ -16,7 +16,7 @@ export function HomeTab({
   saving: boolean;
   onSave: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const why = asWhy(form.whyChooseUs);
   const stats = asStats(form.stats);
   const tasks = asTasks(form.tasks);
@@ -179,10 +179,28 @@ export function HomeTab({
         </div>
         <PhotoField label={t.website.photo} value={text(form.principalPhotoUrl)} onChange={(url) => setForm({ ...form, principalPhotoUrl: url })} />
         <Field label={`${t.website.quote} · বাংলা`}>
-          <Textarea maxLength={280} value={text(form.principalQuoteBn)} onChange={(event) => setForm({ ...form, principalQuoteBn: event.target.value })} />
+          <Textarea rows={6} maxLength={4000} value={text(form.principalQuoteBn)} onChange={(event) => setForm({ ...form, principalQuoteBn: event.target.value })} />
         </Field>
         <Field label={`${t.website.quote} · English`}>
-          <Textarea maxLength={280} value={text(form.principalQuoteEn)} onChange={(event) => setForm({ ...form, principalQuoteEn: event.target.value })} />
+          <Textarea rows={6} maxLength={4000} value={text(form.principalQuoteEn)} onChange={(event) => setForm({ ...form, principalQuoteEn: event.target.value })} />
+        </Field>
+      </SectionFrame>
+
+      <SectionFrame title={locale === "bn" ? "সভাপতি মহোদয়ের বাণী" : "President's Message"} where={t.website.wherePrincipal} href="/">
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Field label={t.common.name}>
+            <Input value={text(form.presidentName)} onChange={(event) => setForm({ ...form, presidentName: event.target.value })} />
+          </Field>
+          <Field label={t.website.designation}>
+            <Input value={text(form.presidentDesignation)} onChange={(event) => setForm({ ...form, presidentDesignation: event.target.value })} />
+          </Field>
+        </div>
+        <PhotoField label={t.website.photo} value={text(form.presidentPhotoUrl)} onChange={(url) => setForm({ ...form, presidentPhotoUrl: url })} />
+        <Field label={`${t.website.quote} · বাংলা`}>
+          <Textarea rows={6} maxLength={4000} value={text(form.presidentQuoteBn)} onChange={(event) => setForm({ ...form, presidentQuoteBn: event.target.value })} />
+        </Field>
+        <Field label={`${t.website.quote} · English`}>
+          <Textarea rows={6} maxLength={4000} value={text(form.presidentQuoteEn)} onChange={(event) => setForm({ ...form, presidentQuoteEn: event.target.value })} />
         </Field>
       </SectionFrame>
       <div className="sticky bottom-4">

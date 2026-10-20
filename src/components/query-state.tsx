@@ -12,6 +12,16 @@ export function TableSkeleton({ rows = 6 }: { rows?: number }) {
   );
 }
 
+/** Thin bar while RTK refetches with cached rows still visible. */
+export function SoftFetchBar({ active }: { active: boolean }) {
+  if (!active) return null;
+  return (
+    <div className="mb-2 h-0.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+      <div className="h-full w-1/3 animate-pulse bg-primary/50" />
+    </div>
+  );
+}
+
 export function QueryError({ onRetry, message }: { onRetry?: () => void; message?: string }) {
   const { t } = useI18n();
   return (

@@ -7,7 +7,7 @@ import { toastApiResult } from "@/lib/toast-api";
 import { DataTable } from "@/components/data-table";
 import { FeeReceipt, type FeeReceiptData } from "@/components/fee-receipt";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state";
+import { EmptyState, QueryError, SoftFetchBar, TableSkeleton } from "@/components/query-state";
 import { StatCard } from "@/components/stat-card";
 import { Button, Field, Input, Select } from "@/components/ui";
 import { useGetFeeSummaryQuery, useGetLedgersQuery, useGetStudentsQuery, useMeQuery, useRecordFeePaymentsMutation } from "@/lib/api/schoolApi";
@@ -96,7 +96,7 @@ export default function FeeCollectedPage() {
   const { t } = useI18n();
   const { data: session } = useMeQuery();
   const { data: summary } = useGetFeeSummaryQuery();
-  const { data, isLoading, isError, refetch } = useGetLedgersQuery();
+  const { data, isLoading, isFetching, isError, refetch } = useGetLedgersQuery();
   const [recordPayments, { isLoading: saving }] = useRecordFeePaymentsMutation();
   const [studentQuery, setStudentQuery] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState("");
@@ -523,7 +523,8 @@ export default function FeeCollectedPage() {
           </Select>
         </div>
 
-        {isLoading ? <TableSkeleton /> : null}
+        {isLoading && !data ? <TableSkeleton /> : null}
+        <SoftFetchBar active={isFetching && Boolean(data)} />
         {isError ? <QueryError onRetry={refetch} /> : null}
         {!isLoading && !filtered.length ? <EmptyState title={t.fees.emptyCollected} /> : null}
 

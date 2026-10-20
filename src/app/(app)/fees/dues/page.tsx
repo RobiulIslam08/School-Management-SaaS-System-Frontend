@@ -6,7 +6,7 @@ import { Banknote, Search, Wallet } from "lucide-react";
 import { toastApiResult } from "@/lib/toast-api";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState, QueryError, TableSkeleton } from "@/components/query-state";
+import { EmptyState, QueryError, SoftFetchBar, TableSkeleton } from "@/components/query-state";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
 import { Button, Field, Input, Select } from "@/components/ui";
@@ -55,10 +55,9 @@ function DuesInner() {
   const { data: session } = useMeQuery();
   const academicYear = session?.data.settings?.academicYear || String(new Date().getFullYear());
   const { data: summary } = useGetFeeSummaryQuery();
-  const { data, isLoading, isError, refetch } = useGetLedgersQuery(
+  const { data, isLoading, isFetching, isError, refetch } = useGetLedgersQuery(
     presetStudent ? { studentId: presetStudent } : undefined
   );
-  const { data: students } = useGetStudentsQuery();
   const [createLedger] = useCreateLedgerMutation();
 
   const [form, setForm] = useState({
@@ -71,6 +70,10 @@ function DuesInner() {
   const [studentSearch, setStudentSearch] = useState("");
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+
+  const needStudents =
+    Boolean(presetStudent) || Boolean(form.studentId) || studentSearch.trim().length >= 1;
+  const { data: students } = useGetStudentsQuery(undefined, { skip: !needStudents });
 
   const studentList = (students?.data ?? []) as StudentOption[];
   const allRows = (data?.data ?? []) as LedgerRow[];
@@ -127,12 +130,19 @@ function DuesInner() {
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <StatCard
           label={t.fees.due}
-          value={`৳ ${money(scopedDue)}`}
+          value={isLoading && !data ? "—" : `৳ ${money(scopedDue)}`}
           icon={<Wallet size={18} />}
           tone="warning"
         />
-        <StatCard label={t.fees.openLedgers} value={rows.length} icon={<Banknote size={18} />} />
-        <StatCard label={t.fees.remaining} value={`৳ ${money(totalRemaining)}`} />
+        <StatCard
+          label={t.fees.openLedgers}
+          value={isLoading && !data ? "—" : rows.length}
+          icon={<Banknote size={18} />}
+        />
+        <StatCard
+          label={t.fees.remaining}
+          value={isLoading && !data ? "—" : `৳ ${money(totalRemaining)}`}
+        />
       </div>
 
       {!presetStudent && (summary?.data.byClass ?? []).length ? (
@@ -186,36 +196,38 @@ function DuesInner() {
                 {selectedStudent.studentId ? ` · ${selectedStudent.studentId}` : ""}
               </p>
             ) : null}
-            <ul className="mt-2 max-h-40 overflow-y-auto rounded-md border border-border">
-              {studentMatches.length ? (
-                studentMatches.map((item) => (
-                  <li key={item._id}>
-                    <button
-                      type="button"
-                      className={cn(
-                        "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-muted/50",
-                        form.studentId === item._id && "bg-primary/10 font-medium"
-                      )}
-                      onClick={() => {
-                        setForm({ ...form, studentId: item._id });
-                        setStudentSearch(
-                          item.studentId ? `${item.name} · ${item.studentId}` : item.name
-                        );
-                      }}
-                    >
-                      <span className="truncate">{item.name}</span>
-                      {item.studentId ? (
-                        <span className="shrink-0 font-mono text-xs text-muted-foreground">
-                          {item.studentId}
-                        </span>
-                      ) : null}
-                    </button>
-                  </li>
-                ))
-              ) : (
-                <li className="px-3 py-2 text-sm text-muted-foreground">{t.fees.noMatch}</li>
-              )}
-            </ul>
+            {needStudents ? (
+              <ul className="mt-2 max-h-40 overflow-y-auto rounded-md border border-border">
+                {studentMatches.length ? (
+                  studentMatches.map((item) => (
+                    <li key={item._id}>
+                      <button
+                        type="button"
+                        className={cn(
+                          "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-muted/50",
+                          form.studentId === item._id && "bg-primary/10 font-medium"
+                        )}
+                        onClick={() => {
+                          setForm({ ...form, studentId: item._id });
+                          setStudentSearch(
+                            item.studentId ? `${item.name} · ${item.studentId}` : item.name
+                          );
+                        }}
+                      >
+                        <span className="truncate">{item.name}</span>
+                        {item.studentId ? (
+                          <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                            {item.studentId}
+                          </span>
+                        ) : null}
+                      </button>
+                    </li>
+                  ))
+                ) : (
+                  <li className="px-3 py-2 text-sm text-muted-foreground">{t.fees.noMatch}</li>
+                )}
+              </ul>
+            ) : null}
           </Field>
           <Field label={t.fees.titleField}>
             <Select value={form.head} onChange={(e) => setForm({ ...form, head: e.target.value })} required>
@@ -282,7 +294,8 @@ function DuesInner() {
         </Select>
       </div>
 
-      {isLoading ? <TableSkeleton /> : null}
+      {isLoading && !data ? <TableSkeleton /> : null}
+      <SoftFetchBar active={isFetching && Boolean(data)} />
       {isError ? <QueryError onRetry={refetch} /> : null}
       {!isLoading && !filtered.length ? <EmptyState title={t.fees.emptyDues} /> : null}
 

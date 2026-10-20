@@ -10,6 +10,7 @@ export interface NavItem {
     | "results"
     | "marksheets"
     | "students"
+    | "studentPromotion"
     | "admit"
     | "teachers"
     | "staff"
@@ -98,6 +99,7 @@ export const NAV_GROUPS: NavGroup[] = [
     titleKey: "people",
     items: [
       { href: "/students", labelKey: "students", feature: "students", permission: "students:view" },
+      { href: "/students/promotion", labelKey: "studentPromotion", feature: "students", permission: "students:approve" },
       { href: "/teachers", labelKey: "teachers", feature: "teachers", permission: "teachers:view" },
       { href: "/staff", labelKey: "staff", permission: "users:view" },
     ],
