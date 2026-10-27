@@ -91,7 +91,13 @@ export default function SettingsPage() {
       defaultLanguage: form.defaultLanguage,
       theme: { primary: form.primary, radius: "0.75rem" },
     });
-    toastApiResult(result, t.common.save, t.common.loadError);
+    if (toastApiResult(result, t.common.save, t.common.loadError)) {
+      try {
+        await fetch("/api/revalidate-public", { method: "POST" });
+      } catch {
+        /* optional; backend + 60s ISR still apply */
+      }
+    }
   }
 
   return (
