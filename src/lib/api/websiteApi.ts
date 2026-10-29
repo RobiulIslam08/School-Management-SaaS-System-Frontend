@@ -20,7 +20,7 @@ export const websiteApi = baseApi.injectEndpoints({
     }),
     saveWebsiteConfig: build.mutation<Envelope<unknown>, Record<string, unknown>>({
       query: (body) => ({ url: "/website/config", method: "PUT", body }),
-      invalidatesTags: ["Website"],
+      invalidatesTags: ["Website", "Settings", "Session"],
     }),
     saveWebsitePage: build.mutation<Envelope<unknown>, { id?: string } & Record<string, unknown>>({
       query: ({ id, ...body }) => (id ? { url: `/website/pages/${id}`, method: "PATCH", body } : { url: "/website/pages", method: "POST", body }),

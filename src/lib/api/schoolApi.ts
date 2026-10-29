@@ -101,7 +101,7 @@ export const schoolApi = baseApi.injectEndpoints({
     }),
     updateSettings: build.mutation<Envelope<SchoolSettings>, Partial<SchoolSettings>>({
       query: (body) => ({ url: "/settings", method: "PATCH", body }),
-      invalidatesTags: ["Settings", "Session"],
+      invalidatesTags: ["Settings", "Session", "Website"],
     }),
     getPackages: build.query<Envelope<{ modules: FeatureMap; labels: Record<string, string> }>, void>({
       query: () => "/owner/packages",

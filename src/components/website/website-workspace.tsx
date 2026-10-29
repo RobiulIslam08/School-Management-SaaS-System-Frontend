@@ -109,12 +109,23 @@ export function WebsiteWorkspace() {
     setFormState(next);
   }
 
-  async function bumpPublicCache() {
+  async function bumpPublicCache(primaryColor?: string) {
     try {
-      await fetch("/api/revalidate-public", { method: "POST" });
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(
+          "school-theme-updated",
+          JSON.stringify({ primary: primaryColor ?? "", ts: Date.now() })
+        );
+        if (typeof BroadcastChannel !== "undefined") {
+          const channel = new BroadcastChannel("school-theme-sync");
+          channel.postMessage({ primary: primaryColor ?? "", ts: Date.now() });
+          channel.close();
+        }
+      }
     } catch {
-      /* optional; 60s TTL still applies */
+      /* ignore storage/broadcast errors */
     }
+    void fetch("/api/revalidate-public", { method: "POST" }).catch(() => {});
   }
 
   async function onSaveConfig() {
@@ -125,7 +136,7 @@ export function WebsiteWorkspace() {
     const result = await saveConfig(configPayload(form));
     if (toastApiResult(result, t.common.save, t.common.loadError)) {
       setConfigDirty(false);
-      void bumpPublicCache();
+      void bumpPublicCache(text(form.themePrimary));
     }
   }
 

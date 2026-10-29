@@ -93,10 +93,21 @@ export default function SettingsPage() {
     });
     if (toastApiResult(result, t.common.save, t.common.loadError)) {
       try {
-        await fetch("/api/revalidate-public", { method: "POST" });
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(
+            "school-theme-updated",
+            JSON.stringify({ primary: form.primary, ts: Date.now() })
+          );
+          if (typeof BroadcastChannel !== "undefined") {
+            const channel = new BroadcastChannel("school-theme-sync");
+            channel.postMessage({ primary: form.primary, ts: Date.now() });
+            channel.close();
+          }
+        }
       } catch {
-        /* optional; backend + 60s ISR still apply */
+        /* ignore storage/broadcast errors */
       }
+      void fetch("/api/revalidate-public", { method: "POST" }).catch(() => {});
     }
   }
 
